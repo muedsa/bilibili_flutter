@@ -6,6 +6,8 @@ import 'package:dart_vlc/dart_vlc.dart';
 import 'package:video_player/video_player.dart';
 import 'package:bilibili_flutter/utils.dart';
 
+import 'd_pad_control_focus.dart';
+
 class AdaptivePlayer extends StatefulWidget {
   const AdaptivePlayer(this.controller, {super.key});
 
@@ -16,20 +18,38 @@ class AdaptivePlayer extends StatefulWidget {
 }
 
 class _AdaptivePlayer extends State<AdaptivePlayer> {
+  late final FocusNode _focusNode;
+
   @override
   void initState() {
     super.initState();
+    _focusNode = FocusNode();
+    WidgetsBinding.instance.addPostFrameCallback((timeStamp) {
+      FocusScope.of(context).requestFocus(_focusNode);
+    });
   }
 
   @override
   Widget build(BuildContext context) {
     late Widget w;
-    if (widget.controller._type == AdaptivePlayerType.dartVlc) {
+    if (widget.controller.type == AdaptivePlayerType.dartVlc) {
       w = Video(player: widget.controller._vlcPlayer, showControls: true);
-    } else if (widget.controller._type == AdaptivePlayerType.videoPlayer) {
+    } else if (widget.controller.type == AdaptivePlayerType.videoPlayer) {
       w = widget.controller._videoPlayerController != null &&
               widget.controller._videoPlayerController!.value.isInitialized
-          ? VideoPlayer(widget.controller._videoPlayerController!)
+          ? SimpleDPadFocusTap(
+              focusNode: _focusNode,
+              onTap: () {
+                Navigator.of(context)
+                    .push(PlayerControllerPopupRoute(widget.controller));
+              },
+              onDPadKey: (key, count) {
+                if(key != DPadControlKey.select) {
+                  Navigator.of(context)
+                      .push(PlayerControllerPopupRoute(widget.controller));
+                }
+              },
+              child: VideoPlayer(widget.controller._videoPlayerController!))
           : MessageWidget.loading;
     } else {
       w = MessageWidget.unsupported;
@@ -40,62 +60,118 @@ class _AdaptivePlayer extends State<AdaptivePlayer> {
 
 enum AdaptivePlayerType { unsupported, dartVlc, videoPlayer }
 
-class AdaptivePlayerController extends ValueNotifier<VideoPlayerValue> {
+class AdaptivePlayerController {
   AdaptivePlayerController({
     required this.mediaUrl,
     this.httpHeaders = const <String, String>{},
     this.formatHint,
-  }) : super(VideoPlayerValue(duration: Duration.zero));
+    required this.title,
+    required this.subTitle,
+  }) : type = AdaptivePlayerType.unsupported;
 
   final String mediaUrl;
   final Map<String, String> httpHeaders;
   final VideoFormat? formatHint;
+  final String title;
+  final String subTitle;
 
-  late final AdaptivePlayerType _type;
+  AdaptivePlayerType type;
   Player? _vlcPlayer;
   VideoPlayerController? _videoPlayerController;
 
   Future<void> initialize() async {
+    debugPrint('player mediaUrl:$mediaUrl');
     if (kIsWeb) {
-      _type = AdaptivePlayerType.videoPlayer;
+      type = AdaptivePlayerType.videoPlayer;
     } else {
       if (Platform.isIOS || Platform.isAndroid || Platform.isFuchsia) {
-        _type = AdaptivePlayerType.videoPlayer;
+        type = AdaptivePlayerType.videoPlayer;
       } else if (Platform.isWindows || Platform.isLinux) {
-        _type = AdaptivePlayerType.dartVlc;
-      } else {
-        _type = AdaptivePlayerType.unsupported;
+        type = AdaptivePlayerType.dartVlc;
       }
     }
-    if (_type == AdaptivePlayerType.dartVlc) {
+    if (type == AdaptivePlayerType.dartVlc) {
       _vlcPlayer = Player(id: 23333, commandlineArguments: [
         '--http-referrer=${HttpHeaderUtils.getValue(httpHeaders, HttpHeaderUtils.referrer)}'
       ]);
       _vlcPlayer?.open(Media.network(mediaUrl, parse: true));
-      return;
-    } else if (_type == AdaptivePlayerType.videoPlayer) {
+    } else if (type == AdaptivePlayerType.videoPlayer) {
       _videoPlayerController = VideoPlayerController.network(mediaUrl,
           formatHint: formatHint, httpHeaders: httpHeaders);
       return _videoPlayerController?.initialize();
     }
+    return;
   }
 
-  @override
   Future<void> dispose() async {
-    super.dispose();
-    if (_type == AdaptivePlayerType.dartVlc) {
+    if (type == AdaptivePlayerType.dartVlc) {
       _vlcPlayer?.dispose();
-    } else if (_type == AdaptivePlayerType.videoPlayer) {
+    } else if (type == AdaptivePlayerType.videoPlayer) {
       _videoPlayerController?.dispose();
     }
   }
 
   Future<void> play() async {
-    if (_type == AdaptivePlayerType.dartVlc) {
+    if (type == AdaptivePlayerType.dartVlc) {
       _vlcPlayer?.play();
-    } else if (_type == AdaptivePlayerType.videoPlayer) {
+    } else if (type == AdaptivePlayerType.videoPlayer) {
       _videoPlayerController?.play();
     }
   }
 
+  Future<void> pause() async {
+    if (type == AdaptivePlayerType.dartVlc) {
+      _vlcPlayer?.pause();
+    } else if (type == AdaptivePlayerType.videoPlayer) {
+      _videoPlayerController?.pause();
+    }
+  }
+}
+
+class PlayerControllerPopupRoute extends PopupRoute<void> {
+  PlayerControllerPopupRoute(this._controller);
+
+  final AdaptivePlayerController _controller;
+
+  @override
+  Color? get barrierColor => Colors.black.withAlpha(0x50);
+
+  @override
+  bool get barrierDismissible => true;
+
+  @override
+  String? get barrierLabel => 'PlayerController';
+
+  @override
+  Widget buildPage(BuildContext context, Animation<double> animation,
+      Animation<double> secondaryAnimation) {
+    return Padding(
+        padding: const EdgeInsets.all(40),
+        child: Column(children: [
+          Expanded(child: Container()),
+          SizedBox(
+            width: double.infinity,
+            child: Text(
+              _controller.title,
+              maxLines: 1,
+              overflow: TextOverflow.ellipsis,
+              style: Theme.of(context).textTheme.titleLarge,
+            ),
+          ),
+          SizedBox(
+            width: double.infinity,
+            child: Text(
+              _controller.subTitle,
+              maxLines: 1,
+              overflow: TextOverflow.ellipsis,
+              style: Theme.of(context).textTheme.titleMedium,
+            ),
+          ),
+          const Text('TODO 进度条'), // todo 进度条
+          const Text('TODO 按钮组'), // todo 按钮组
+        ]));
+  }
+
+  @override
+  Duration get transitionDuration => const Duration(milliseconds: 300);
 }

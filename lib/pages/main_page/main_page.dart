@@ -31,7 +31,6 @@ class _MainPageState extends State<MainPage> {
     return Scaffold(
       body: Row(children: [
         NavigationRail(
-          groupAlignment: Alignment.center.y,
           destinations: <NavigationRailDestination>[
             NavigationRailDestination(
               icon: const Icon(Icons.home_rounded),
@@ -52,6 +51,7 @@ class _MainPageState extends State<MainPage> {
               _selectedIndex = index;
             });
           },
+          groupAlignment: Alignment.center.y,
           labelType: NavigationRailLabelType.selected,
         ),
         const VerticalDivider(thickness: 1, width: 1),

@@ -15,8 +15,8 @@ class VideoCard extends StatefulWidget {
     required this.author,
     this.authorStyle,
     required this.textBoxHeight,
-    this.color = Colors.transparent,
-    this.focusedColor = Colors.purple,
+    this.color,
+    this.focusedColor,
     super.key,
   });
 
@@ -27,8 +27,8 @@ class VideoCard extends StatefulWidget {
   final String author;
   final TextStyle? authorStyle;
   final double textBoxHeight;
-  final Color color;
-  final Color focusedColor;
+  final Color? color;
+  final Color? focusedColor;
 
   @override
   State<StatefulWidget> createState() => _VideoCardState();
@@ -39,6 +39,8 @@ class _VideoCardState extends State<VideoCard> {
 
   @override
   Widget build(BuildContext context) {
+    Color color = widget.color ?? Colors.transparent;
+    Color focusedColor = widget.focusedColor ?? Theme.of(context).focusColor;
     return SimpleDPadFocusTap(
         onFocusChange: (hasFocused) {
           setState(() {
@@ -56,7 +58,7 @@ class _VideoCardState extends State<VideoCard> {
           textContent: widget.author,
           contentStyle: widget.authorStyle,
           textBoxHeight: widget.textBoxHeight,
-          backgroundColor: focused ? widget.focusedColor : widget.color,
+          backgroundColor: focused ? focusedColor : color,
         ));
   }
 }

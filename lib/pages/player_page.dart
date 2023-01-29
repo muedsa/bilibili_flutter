@@ -21,6 +21,8 @@ class _BilibiliVideoPlayerPageState extends State<BilibiliVideoPlayerPage> {
   void initState() {
     super.initState();
     _controller = AdaptivePlayerController(
+        title: widget.bv,
+        subTitle: widget.bv,
         mediaUrl: 'https://work.muedsa.com/bilibili/dash/${widget.bv}.mbp',
         httpHeaders: <String, String>{
           'referer': 'https://www.bilibili.com/video/${widget.bv}'

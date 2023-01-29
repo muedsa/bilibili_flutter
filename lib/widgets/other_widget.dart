@@ -12,13 +12,13 @@ class MessageWidget extends StatelessWidget {
     return SafeArea(
         child: Center(
             child:
-                Column(mainAxisAlignment: MainAxisAlignment.center, children: [
-      Text(title, textAlign: TextAlign.center, style: textTheme.titleLarge),
-      message != null
-          ? Text(message!,
-              textAlign: TextAlign.center, style: textTheme.bodyMedium)
-          : Container()
-    ])));
+            Column(mainAxisAlignment: MainAxisAlignment.center, children: [
+              Text(title, textAlign: TextAlign.center, style: textTheme.titleLarge),
+              message != null
+                  ? Text(message!,
+                  textAlign: TextAlign.center, style: textTheme.bodyMedium)
+                  : Container()
+            ])));
   }
 
   static MessageWidget error = const MessageWidget(title: 'Error');
