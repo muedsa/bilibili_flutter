@@ -40,7 +40,7 @@ class SimpleDPadFocusTap extends StatefulWidget {
   final Widget child;
   final ValueChanged<bool>? onFocusChange;
   final void Function()? onTap;
-  final void Function(DPadControlKey, int)? onDPadKey;
+  final void Function(DPadControlKeyEventType, DPadControlKey, int)? onDPadKey;
   final FocusNode? focusNode;
   final String? debugLabel;
 
@@ -98,7 +98,7 @@ class SimpleDPadFocus extends StatefulWidget {
   final Widget child;
   final ValueChanged<bool>? onFocusChange;
   final void Function()? onDPadSelected;
-  final void Function(DPadControlKey, int)? onDPadKey;
+  final void Function(DPadControlKeyEventType, DPadControlKey, int)? onDPadKey;
   final FocusNode? focusNode;
   final String? debugLabel;
 
@@ -121,23 +121,22 @@ class _SimpleDPadFocusState extends State<SimpleDPadFocus> {
           widget.onFocusChange?.call(hasFocus);
         },
         onKey: (node, event) {
-          if (event is RawKeyUpEvent) {
-            if (event.logicalKey == LogicalKeyboardKey.select ||
-                event.logicalKey == LogicalKeyboardKey.gameButtonA ||
-                event.logicalKey == LogicalKeyboardKey.gameButtonSelect ||
-                event.logicalKey == LogicalKeyboardKey.enter ||
-                event.logicalKey == LogicalKeyboardKey.numpadEnter) {
-              widget.onDPadKey?.call(DPadControlKey.select, _count++);
-              widget.onDPadSelected?.call();
-            } else if (event.logicalKey == LogicalKeyboardKey.arrowUp) {
-              widget.onDPadKey?.call(DPadControlKey.up, _count++);
-            } else if (event.logicalKey == LogicalKeyboardKey.arrowDown) {
-              widget.onDPadKey?.call(DPadControlKey.down, _count++);
-            } else if (event.logicalKey == LogicalKeyboardKey.arrowLeft) {
-              widget.onDPadKey?.call(DPadControlKey.left, _count++);
-            } else if (event.logicalKey == LogicalKeyboardKey.arrowRight) {
-              widget.onDPadKey?.call(DPadControlKey.right, _count++);
-            }
+          DPadControlKeyEventType type = event is RawKeyUpEvent ? DPadControlKeyEventType.up : DPadControlKeyEventType.down;
+          if (event.logicalKey == LogicalKeyboardKey.select ||
+              event.logicalKey == LogicalKeyboardKey.gameButtonA ||
+              event.logicalKey == LogicalKeyboardKey.gameButtonSelect ||
+              event.logicalKey == LogicalKeyboardKey.enter ||
+              event.logicalKey == LogicalKeyboardKey.numpadEnter) {
+            widget.onDPadKey?.call(type, DPadControlKey.select, _count++);
+            widget.onDPadSelected?.call();
+          } else if (event.logicalKey == LogicalKeyboardKey.arrowUp) {
+            widget.onDPadKey?.call(type, DPadControlKey.up, _count++);
+          } else if (event.logicalKey == LogicalKeyboardKey.arrowDown) {
+            widget.onDPadKey?.call(type, DPadControlKey.down, _count++);
+          } else if (event.logicalKey == LogicalKeyboardKey.arrowLeft) {
+            widget.onDPadKey?.call(type, DPadControlKey.left, _count++);
+          } else if (event.logicalKey == LogicalKeyboardKey.arrowRight) {
+            widget.onDPadKey?.call(type, DPadControlKey.right, _count++);
           }
           return KeyEventResult.ignored;
         },
@@ -151,4 +150,9 @@ enum DPadControlKey {
   left,
   right,
   select;
+}
+
+enum DPadControlKeyEventType {
+  up,
+  down
 }

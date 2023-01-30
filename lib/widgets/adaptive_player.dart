@@ -1,3 +1,4 @@
+import 'dart:async';
 import 'dart:io';
 import 'package:bilibili_flutter/widgets/other_widget.dart';
 import 'package:flutter/material.dart';
@@ -43,8 +44,9 @@ class _AdaptivePlayer extends State<AdaptivePlayer> {
                 Navigator.of(context)
                     .push(PlayerControllerPopupRoute(widget.controller));
               },
-              onDPadKey: (key, count) {
-                if(key != DPadControlKey.select) {
+              onDPadKey: (type, key, count) {
+                if (type == DPadControlKeyEventType.up &&
+                    key != DPadControlKey.select) {
                   Navigator.of(context)
                       .push(PlayerControllerPopupRoute(widget.controller));
                 }
@@ -98,16 +100,15 @@ class AdaptivePlayerController {
     } else if (type == AdaptivePlayerType.videoPlayer) {
       _videoPlayerController = VideoPlayerController.network(mediaUrl,
           formatHint: formatHint, httpHeaders: httpHeaders);
-      return _videoPlayerController?.initialize();
+      await _videoPlayerController?.initialize();
     }
-    return;
   }
 
   Future<void> dispose() async {
     if (type == AdaptivePlayerType.dartVlc) {
       _vlcPlayer?.dispose();
     } else if (type == AdaptivePlayerType.videoPlayer) {
-      _videoPlayerController?.dispose();
+      await _videoPlayerController?.dispose();
     }
   }
 
@@ -115,7 +116,7 @@ class AdaptivePlayerController {
     if (type == AdaptivePlayerType.dartVlc) {
       _vlcPlayer?.play();
     } else if (type == AdaptivePlayerType.videoPlayer) {
-      _videoPlayerController?.play();
+      await _videoPlayerController?.play();
     }
   }
 
@@ -123,8 +124,34 @@ class AdaptivePlayerController {
     if (type == AdaptivePlayerType.dartVlc) {
       _vlcPlayer?.pause();
     } else if (type == AdaptivePlayerType.videoPlayer) {
-      _videoPlayerController?.pause();
+      await _videoPlayerController?.pause();
     }
+  }
+
+  Future<void> seekTo(Duration position) async {
+    if (type == AdaptivePlayerType.dartVlc) {
+      _vlcPlayer?.seek(position);
+    } else if (type == AdaptivePlayerType.videoPlayer) {
+      await _videoPlayerController?.seekTo(position);
+    }
+  }
+
+  bool get isPlaying {
+    if (type == AdaptivePlayerType.dartVlc) {
+      return _vlcPlayer?.playback.isPlaying ?? false;
+    } else if (type == AdaptivePlayerType.videoPlayer) {
+      return _videoPlayerController?.value.isPlaying ?? false;
+    }
+    return false;
+  }
+
+  Future<Duration?> get position async {
+    if (type == AdaptivePlayerType.dartVlc) {
+      return _vlcPlayer?.position.position;
+    } else if (type == AdaptivePlayerType.videoPlayer) {
+      return _videoPlayerController?.position;
+    }
+    return null;
   }
 }
 
@@ -148,7 +175,10 @@ class PlayerControllerPopupRoute extends PopupRoute<void> {
     return Padding(
         padding: const EdgeInsets.all(40),
         child: Column(children: [
-          Expanded(child: Container()),
+          Expanded(
+              child: Center(
+            child: _AdaptivePlayerSimpleControlGroup(_controller),
+          )),
           SizedBox(
             width: double.infinity,
             child: Text(
@@ -167,11 +197,209 @@ class PlayerControllerPopupRoute extends PopupRoute<void> {
               style: Theme.of(context).textTheme.titleMedium,
             ),
           ),
-          const Text('TODO 进度条'), // todo 进度条
-          const Text('TODO 按钮组'), // todo 按钮组
+          SizedBox(
+              width: double.infinity,
+              child: _AdaptivePlayerProgressBar(_controller)),
+          Text('TODO 其他的按钮组', style: Theme.of(context).textTheme.titleMedium), // todo 其他的按钮组
         ]));
   }
 
   @override
   Duration get transitionDuration => const Duration(milliseconds: 300);
+}
+
+class _AdaptivePlayerSimpleControlGroup extends StatefulWidget {
+  const _AdaptivePlayerSimpleControlGroup(this._controller);
+
+  final AdaptivePlayerController _controller;
+
+  @override
+  State<StatefulWidget> createState() =>
+      _AdaptivePlayerSimpleControlGroupState();
+}
+
+class _AdaptivePlayerSimpleControlGroupState
+    extends State<_AdaptivePlayerSimpleControlGroup> {
+  bool _focused = false;
+
+  bool _keyDowning = false;
+  DPadControlKey? _downedKey;
+
+  late final FocusNode _focusNode;
+
+  @override
+  void initState() {
+    super.initState();
+    _focusNode = FocusNode();
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      FocusScope.of(context).requestFocus(_focusNode);
+    });
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    return SimpleDPadFocusTap(
+        focusNode: _focusNode,
+        onFocusChange: (hasFocus) {
+          setState(() {
+            _focused = hasFocus;
+          });
+        },
+        onDPadKey: (type, key, count) {
+          if (type == DPadControlKeyEventType.up) {
+            if (key == DPadControlKey.left) {
+              widget._controller.position.then((position) {
+                if (position != null) {
+                  widget._controller
+                      .seekTo(position + const Duration(seconds: -10));
+                }
+              });
+            } else if (key == DPadControlKey.right) {
+              widget._controller.position.then((position) {
+                if (position != null) {
+                  widget._controller
+                      .seekTo(position + const Duration(seconds: 10));
+                }
+              });
+            } else if (key == DPadControlKey.select) {
+              if (widget._controller.isPlaying) {
+                widget._controller.pause().then((_) => setState(() {}));
+              } else {
+                widget._controller.play().then((_) => setState(() {}));
+              }
+            }
+            setState(() {
+              _downedKey = null;
+              _keyDowning = false;
+            });
+          } else if (key == DPadControlKey.left ||
+              key == DPadControlKey.right ||
+              key == DPadControlKey.select) {
+            setState(() {
+              _downedKey = key;
+              _keyDowning = true;
+            });
+          } else {
+            setState(() {
+              _downedKey = null;
+              _keyDowning = false;
+            });
+          }
+        },
+        child: Row(
+          mainAxisAlignment: MainAxisAlignment.center,
+          crossAxisAlignment: CrossAxisAlignment.center,
+          children: [
+            Icon(
+              Icons.arrow_circle_left_rounded,
+              color: _getColorByKey(DPadControlKey.left),
+              size: 60,
+            ),
+            Icon(
+                widget._controller.isPlaying
+                    ? Icons.pause_circle_filled_rounded
+                    : Icons.play_circle_filled_rounded,
+                color: _getColorByKey(DPadControlKey.select),
+                size: 60),
+            Icon(Icons.arrow_circle_right_rounded,
+                color: _getColorByKey(DPadControlKey.right), size: 60),
+          ],
+        ));
+  }
+
+  Color _getColorByKey(DPadControlKey key) {
+    Color color;
+    if (_focused) {
+      if (_keyDowning && key == _downedKey) {
+        color = Colors.redAccent;
+      } else {
+        color = Colors.white;
+      }
+    } else {
+      color = Colors.white54;
+    }
+    return color;
+  }
+
+  @override
+  void dispose() {
+    super.dispose();
+    _focusNode.dispose();
+  }
+}
+
+class _AdaptivePlayerProgressBar extends StatefulWidget {
+  const _AdaptivePlayerProgressBar(this._controller);
+
+  final AdaptivePlayerController _controller;
+
+  @override
+  State<StatefulWidget> createState() => _AdaptivePlayerProgressBarState();
+}
+
+class _AdaptivePlayerProgressBarState
+    extends State<_AdaptivePlayerProgressBar> {
+  bool focused = false;
+
+  @override
+  Widget build(BuildContext context) {
+    return SimpleDPadFocusTap(
+        onFocusChange: (hasFocus) {
+          setState(() {
+            focused = hasFocus;
+          });
+        },
+        onDPadKey: (type, key, count) {
+          if (type == DPadControlKeyEventType.up) {
+            if (key == DPadControlKey.left) {
+              widget._controller.position.then((position) {
+                if (position != null) {
+                  widget._controller
+                      .seekTo(position + const Duration(seconds: -10));
+                }
+              });
+            } else if (key == DPadControlKey.right) {
+              widget._controller.position.then((position) {
+                if (position != null) {
+                  widget._controller
+                      .seekTo(position + const Duration(seconds: 10));
+                }
+              });
+            } else if (key == DPadControlKey.select) {
+              if (widget._controller.isPlaying) {
+                widget._controller.pause().then((_) => setState(() {}));
+              } else {
+                widget._controller.play().then((_) => setState(() {}));
+              }
+            }
+          }
+        },
+        child: _buildProgressBar());
+  }
+
+  Widget _buildProgressBar() {
+    late Widget w;
+    if (widget._controller.type == AdaptivePlayerType.videoPlayer &&
+        widget._controller._videoPlayerController != null) {
+      w = VideoProgressIndicator(widget._controller._videoPlayerController!,
+          colors: focused ? focusedColors : colors, allowScrubbing: true);
+    } else if (widget._controller.type == AdaptivePlayerType.videoPlayer) {
+      w = Container();
+    } else {
+      w = Container(color: Colors.redAccent);
+    }
+    return w;
+  }
+
+  static VideoProgressColors colors = VideoProgressColors(
+    playedColor: Colors.white70,
+    bufferedColor: Colors.blueGrey.shade800,
+    backgroundColor: Colors.grey.shade700,
+  );
+
+  static VideoProgressColors focusedColors = VideoProgressColors(
+    playedColor: Colors.white,
+    bufferedColor: Colors.blueGrey.shade800,
+    backgroundColor: Colors.grey.shade700,
+  );
 }
