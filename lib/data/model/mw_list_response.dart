@@ -8,7 +8,7 @@ class MwListResponse<T> {
   final String msg;
   final List<T>? data;
 
-  MwListResponse({
+  const MwListResponse({
     required this.code,
     required this.msg,
     this.data
