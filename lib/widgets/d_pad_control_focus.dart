@@ -46,11 +46,9 @@ class SimpleDPadFocusTap extends StatefulWidget {
 
   @override
   State<StatefulWidget> createState() => _SimpleDPadFocusTapState();
-
 }
 
 class _SimpleDPadFocusTapState extends State<SimpleDPadFocusTap> {
-
   late final FocusNode focusNode;
 
   @override
@@ -68,20 +66,23 @@ class _SimpleDPadFocusTapState extends State<SimpleDPadFocusTap> {
   @override
   Widget build(BuildContext context) {
     return GestureDetector(
-      onTap: (){
+      onTap: () {
         widget.onTap?.call();
         FocusScope.of(context).requestFocus(focusNode);
       },
       child: SimpleDPadFocus(
         focusNode: focusNode,
         onFocusChange: widget.onFocusChange,
-        onDPadSelected: widget.onTap,
+        onDPadSelected: (type) {
+          if(type == DPadControlKeyEventType.up){
+            widget.onTap?.call();
+          }
+        },
         onDPadKey: widget.onDPadKey,
         child: widget.child,
       ),
     );
   }
-
 }
 
 class SimpleDPadFocus extends StatefulWidget {
@@ -97,7 +98,7 @@ class SimpleDPadFocus extends StatefulWidget {
 
   final Widget child;
   final ValueChanged<bool>? onFocusChange;
-  final void Function()? onDPadSelected;
+  final void Function(DPadControlKeyEventType)? onDPadSelected;
   final void Function(DPadControlKeyEventType, DPadControlKey, int)? onDPadKey;
   final FocusNode? focusNode;
   final String? debugLabel;
@@ -107,7 +108,6 @@ class SimpleDPadFocus extends StatefulWidget {
 }
 
 class _SimpleDPadFocusState extends State<SimpleDPadFocus> {
-
   int _count = 0;
 
   @override
@@ -121,14 +121,16 @@ class _SimpleDPadFocusState extends State<SimpleDPadFocus> {
           widget.onFocusChange?.call(hasFocus);
         },
         onKey: (node, event) {
-          DPadControlKeyEventType type = event is RawKeyUpEvent ? DPadControlKeyEventType.up : DPadControlKeyEventType.down;
+          DPadControlKeyEventType type = event is RawKeyUpEvent
+              ? DPadControlKeyEventType.up
+              : DPadControlKeyEventType.down;
           if (event.logicalKey == LogicalKeyboardKey.select ||
               event.logicalKey == LogicalKeyboardKey.gameButtonA ||
               event.logicalKey == LogicalKeyboardKey.gameButtonSelect ||
               event.logicalKey == LogicalKeyboardKey.enter ||
               event.logicalKey == LogicalKeyboardKey.numpadEnter) {
             widget.onDPadKey?.call(type, DPadControlKey.select, _count++);
-            widget.onDPadSelected?.call();
+            widget.onDPadSelected?.call(type);
           } else if (event.logicalKey == LogicalKeyboardKey.arrowUp) {
             widget.onDPadKey?.call(type, DPadControlKey.up, _count++);
           } else if (event.logicalKey == LogicalKeyboardKey.arrowDown) {
@@ -152,7 +154,4 @@ enum DPadControlKey {
   select;
 }
 
-enum DPadControlKeyEventType {
-  up,
-  down
-}
+enum DPadControlKeyEventType { up, down }

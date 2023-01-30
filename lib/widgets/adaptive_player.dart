@@ -34,7 +34,21 @@ class _AdaptivePlayer extends State<AdaptivePlayer> {
   Widget build(BuildContext context) {
     late Widget w;
     if (widget.controller.type == AdaptivePlayerType.dartVlc) {
-      w = Video(player: widget.controller._vlcPlayer, showControls: true);
+      w = SimpleDPadFocusTap(
+          focusNode: _focusNode,
+          onTap: () {
+            Navigator.of(context)
+                .push(PlayerControllerPopupRoute(widget.controller));
+          },
+          onDPadKey: (type, key, count) {
+            if (type == DPadControlKeyEventType.up &&
+                key != DPadControlKey.select) {
+              Navigator.of(context)
+                  .push(PlayerControllerPopupRoute(widget.controller));
+            }
+          },
+          child:
+              Video(player: widget.controller._vlcPlayer, showControls: false));
     } else if (widget.controller.type == AdaptivePlayerType.videoPlayer) {
       w = widget.controller._videoPlayerController != null &&
               widget.controller._videoPlayerController!.value.isInitialized
@@ -200,7 +214,8 @@ class PlayerControllerPopupRoute extends PopupRoute<void> {
           SizedBox(
               width: double.infinity,
               child: _AdaptivePlayerProgressBar(_controller)),
-          Text('TODO 其他的按钮组', style: Theme.of(context).textTheme.titleMedium), // todo 其他的按钮组
+          Text('TODO 其他的按钮组',
+              style: Theme.of(context).textTheme.titleMedium), // todo 其他的按钮组
         ]));
   }
 
@@ -320,12 +335,6 @@ class _AdaptivePlayerSimpleControlGroupState
     }
     return color;
   }
-
-  @override
-  void dispose() {
-    super.dispose();
-    _focusNode.dispose();
-  }
 }
 
 class _AdaptivePlayerProgressBar extends StatefulWidget {
@@ -383,10 +392,34 @@ class _AdaptivePlayerProgressBarState
         widget._controller._videoPlayerController != null) {
       w = VideoProgressIndicator(widget._controller._videoPlayerController!,
           colors: focused ? focusedColors : colors, allowScrubbing: true);
-    } else if (widget._controller.type == AdaptivePlayerType.videoPlayer) {
-      w = Container();
+    } else if (widget._controller.type == AdaptivePlayerType.dartVlc && widget._controller._vlcPlayer != null) {
+      w = Padding(
+        padding: const EdgeInsets.only(top: 5.0),
+        child: StreamBuilder<PositionState>(
+          stream: widget._controller._vlcPlayer?.positionStream,
+          builder: (BuildContext context,
+              AsyncSnapshot<PositionState> snapshot) {
+            final PositionState? state = snapshot.data;
+            final progress =
+                state?.position ?? Duration.zero;
+            final total =
+                state?.duration ?? Duration.zero;
+            return LinearProgressIndicator(
+              value: total == Duration.zero ? null : progress.inSeconds / total.inSeconds,
+              valueColor: AlwaysStoppedAnimation<Color>(colors.playedColor),
+              backgroundColor: colors.backgroundColor,
+            );
+          },
+        ),
+      );
     } else {
-      w = Container(color: Colors.redAccent);
+      w = Padding(
+        padding: const EdgeInsets.only(top: 5.0),
+        child: LinearProgressIndicator(
+          valueColor: AlwaysStoppedAnimation<Color>(colors.playedColor),
+          backgroundColor: colors.backgroundColor,
+        ),
+      );
     }
     return w;
   }
