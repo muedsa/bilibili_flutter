@@ -9,6 +9,7 @@ part of 'recommended_video.dart';
 RecommendedVideo _$RecommendedVideoFromJson(Map<String, dynamic> json) =>
     RecommendedVideo(
       bv: json['bv'] as String,
+      cid: json['cid'] as int,
       url: json['url'] as String,
       title: json['title'] as String,
       coverUrl: json['coverUrl'] as String,
@@ -25,6 +26,7 @@ RecommendedVideo _$RecommendedVideoFromJson(Map<String, dynamic> json) =>
 Map<String, dynamic> _$RecommendedVideoToJson(RecommendedVideo instance) =>
     <String, dynamic>{
       'bv': instance.bv,
+      'cid': instance.cid,
       'url': instance.url,
       'title': instance.title,
       'coverUrl': instance.coverUrl,

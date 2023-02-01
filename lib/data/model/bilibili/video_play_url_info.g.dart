@@ -12,7 +12,7 @@ VideoPlayUrlInfo _$VideoPlayUrlInfoFromJson(Map<String, dynamic> json) =>
       format: json['format'] as String,
       acceptFormat: json['accept_format'] as String,
       timeLength: json['timelength'] as int,
-      acceptDescription: (json['acceptDescription'] as List<dynamic>)
+      acceptDescription: (json['accept_description'] as List<dynamic>)
           .map((e) => e as String)
           .toList(),
       acceptQuality: (json['accept_quality'] as List<dynamic>)
@@ -21,7 +21,7 @@ VideoPlayUrlInfo _$VideoPlayUrlInfoFromJson(Map<String, dynamic> json) =>
       videoCodeCid: json['video_codecid'] as int,
       seekParam: json['seek_param'] as String,
       seekType: json['seek_type'] as String,
-      dash: VideoPlayUrlInfo.fromJson(json['dash'] as Map<String, dynamic>),
+      dash: VideoDashInfo.fromJson(json['dash'] as Map<String, dynamic>),
       supportFormats: (json['support_formats'] as List<dynamic>)
           .map((e) => MediaFormat.fromJson(e as Map<String, dynamic>))
           .toList(),
@@ -35,7 +35,7 @@ Map<String, dynamic> _$VideoPlayUrlInfoToJson(VideoPlayUrlInfo instance) =>
       'format': instance.format,
       'timelength': instance.timeLength,
       'accept_format': instance.acceptFormat,
-      'acceptDescription': instance.acceptDescription,
+      'accept_description': instance.acceptDescription,
       'accept_quality': instance.acceptQuality,
       'video_codecid': instance.videoCodeCid,
       'seek_param': instance.seekParam,

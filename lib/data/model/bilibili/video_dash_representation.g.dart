@@ -11,8 +11,7 @@ VideoDashRepresentation _$VideoDashRepresentationFromJson(
     VideoDashRepresentation(
       id: json['id'] as int,
       baseUrl: json['baseUrl'] as String,
-      backupUrl: json['backupUrl'] as String,
-      bandwidth: json['bandwidth'] as String,
+      bandwidth: json['bandwidth'] as int,
       mimeType: json['mimeType'] as String,
       codecs: json['codecs'] as String,
       width: json['width'] as int,
@@ -30,7 +29,6 @@ Map<String, dynamic> _$VideoDashRepresentationToJson(
     <String, dynamic>{
       'id': instance.id,
       'baseUrl': instance.baseUrl,
-      'backupUrl': instance.backupUrl,
       'bandwidth': instance.bandwidth,
       'mimeType': instance.mimeType,
       'codecs': instance.codecs,

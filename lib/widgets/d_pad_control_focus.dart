@@ -74,7 +74,7 @@ class _SimpleDPadFocusTapState extends State<SimpleDPadFocusTap> {
         focusNode: focusNode,
         onFocusChange: widget.onFocusChange,
         onDPadSelected: (type) {
-          if(type == DPadControlKeyEventType.up){
+          if (type == DPadControlKeyEventType.up) {
             widget.onTap?.call();
           }
         },

@@ -45,6 +45,9 @@ dependencies:
   auto_size_text: ^3.0.0
   dart_vlc: ^0.4.0
   build_runner: ^2.3.3
+  sprintf: ^7.0.0
+  google_fonts: ^4.0.1
+  lzstring: ^2.0.0+2
 
 dev_dependencies:
   flutter_test:

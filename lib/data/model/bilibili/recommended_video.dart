@@ -5,6 +5,7 @@ part 'recommended_video.g.dart';
 @JsonSerializable()
 class RecommendedVideo {
   final String bv;
+  final int cid;
   final String url;
   final String title;
   final String coverUrl;
@@ -19,6 +20,7 @@ class RecommendedVideo {
 
   RecommendedVideo(
       {required this.bv,
+      required this.cid,
       required this.url,
       required this.title,
       required this.coverUrl,
@@ -31,7 +33,8 @@ class RecommendedVideo {
       required this.likeNum,
       required this.danmakuNum});
 
-  factory RecommendedVideo.fromJson(Map<String, dynamic> srcJson) => _$RecommendedVideoFromJson(srcJson);
+  factory RecommendedVideo.fromJson(Map<String, dynamic> srcJson) =>
+      _$RecommendedVideoFromJson(srcJson);
 
   Map<String, dynamic> toJson() => _$RecommendedVideoToJson(this);
 }

@@ -1,13 +1,13 @@
 import 'dart:async';
 import 'dart:io';
-import 'package:bilibili_flutter/widgets/other_widget.dart';
-import 'package:flutter/material.dart';
-import 'package:flutter/foundation.dart';
-import 'package:dart_vlc/dart_vlc.dart';
-import 'package:video_player/video_player.dart';
-import 'package:bilibili_flutter/utils.dart';
 
-import 'd_pad_control_focus.dart';
+import 'package:bilibili_flutter/utils.dart';
+import 'package:bilibili_flutter/widgets/d_pad_control_focus.dart';
+import 'package:bilibili_flutter/widgets/other_widget.dart';
+import 'package:dart_vlc/dart_vlc.dart';
+import 'package:flutter/foundation.dart';
+import 'package:flutter/material.dart';
+import 'package:video_player/video_player.dart';
 
 class AdaptivePlayer extends StatefulWidget {
   const AdaptivePlayer(this.controller, {super.key});
@@ -392,20 +392,21 @@ class _AdaptivePlayerProgressBarState
         widget._controller._videoPlayerController != null) {
       w = VideoProgressIndicator(widget._controller._videoPlayerController!,
           colors: focused ? focusedColors : colors, allowScrubbing: true);
-    } else if (widget._controller.type == AdaptivePlayerType.dartVlc && widget._controller._vlcPlayer != null) {
+    } else if (widget._controller.type == AdaptivePlayerType.dartVlc &&
+        widget._controller._vlcPlayer != null) {
       w = Padding(
         padding: const EdgeInsets.only(top: 5.0),
         child: StreamBuilder<PositionState>(
           stream: widget._controller._vlcPlayer?.positionStream,
-          builder: (BuildContext context,
-              AsyncSnapshot<PositionState> snapshot) {
+          builder:
+              (BuildContext context, AsyncSnapshot<PositionState> snapshot) {
             final PositionState? state = snapshot.data;
-            final progress =
-                state?.position ?? Duration.zero;
-            final total =
-                state?.duration ?? Duration.zero;
+            final progress = state?.position ?? Duration.zero;
+            final total = state?.duration ?? Duration.zero;
             return LinearProgressIndicator(
-              value: total == Duration.zero ? null : progress.inSeconds / total.inSeconds,
+              value: total == Duration.zero
+                  ? null
+                  : progress.inSeconds / total.inSeconds,
               valueColor: AlwaysStoppedAnimation<Color>(colors.playedColor),
               backgroundColor: colors.backgroundColor,
             );

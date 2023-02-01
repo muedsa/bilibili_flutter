@@ -1,4 +1,4 @@
-import 'package:bilibili_flutter/data/model/video_dash_segment_base.dart';
+import 'package:bilibili_flutter/data/model/bilibili/video_dash_segment_base.dart';
 import 'package:json_annotation/json_annotation.dart';
 
 part 'video_dash_representation.g.dart';
@@ -11,11 +11,11 @@ class VideoDashRepresentation {
   @JsonKey(name: 'baseUrl')
   final String baseUrl;
 
-  @JsonKey(name: 'backupUrl')
-  final String backupUrl;
+  // @JsonKey(name: 'backupUrl')
+  // final List<String> backupUrl;
 
   @JsonKey(name: 'bandwidth')
-  final String bandwidth;
+  final int bandwidth;
 
   @JsonKey(name: 'mimeType')
   final String mimeType;
@@ -47,7 +47,7 @@ class VideoDashRepresentation {
   VideoDashRepresentation(
       {required this.id,
       required this.baseUrl,
-      required this.backupUrl,
+      //required this.backupUrl,
       required this.bandwidth,
       required this.mimeType,
       required this.codecs,

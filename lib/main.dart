@@ -1,14 +1,16 @@
 import 'dart:io';
-import 'package:bilibili_flutter/widgets/d_pad_control_focus.dart';
-import 'package:flutter/foundation.dart';
-import 'package:flutter/material.dart';
-import 'package:flutter_bloc/flutter_bloc.dart';
-import 'package:dart_vlc/dart_vlc.dart';
-import 'package:bilibili_flutter/pages/main_page/main_page.dart';
-import 'package:bilibili_flutter/pages/player_page.dart';
+
+import 'package:bilibili_flutter/data/model/video_media_info.dart';
 import 'package:bilibili_flutter/data/repository/bilibili.dart';
 import 'package:bilibili_flutter/data/service/api_client.dart';
 import 'package:bilibili_flutter/data/service/provider/bilibili_provider.dart';
+import 'package:bilibili_flutter/pages/main_page/main_page.dart';
+import 'package:bilibili_flutter/pages/player_page.dart';
+import 'package:bilibili_flutter/widgets/d_pad_control_focus.dart';
+import 'package:dart_vlc/dart_vlc.dart';
+import 'package:flutter/foundation.dart';
+import 'package:flutter/material.dart';
+import 'package:flutter_bloc/flutter_bloc.dart';
 
 void main() {
   if (!kIsWeb && (Platform.isWindows || Platform.isLinux)) {
@@ -47,7 +49,8 @@ class MyApp extends StatelessWidget {
         MainPage.routeName: (context) => const MainPage(),
         BilibiliVideoPlayerPage.routeName: (context) {
           return BilibiliVideoPlayerPage(
-              bv: ModalRoute.of(context)!.settings.arguments as String);
+              videoMediaInfo:
+                  ModalRoute.of(context)!.settings.arguments as VideoMediaInfo);
         }
       },
     ));

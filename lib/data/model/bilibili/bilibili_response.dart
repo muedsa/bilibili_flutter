@@ -1,21 +1,23 @@
 import 'package:json_annotation/json_annotation.dart';
 
-part 'bilibili_list_response.g.dart';
+part 'bilibili_response.g.dart';
 
 @JsonSerializable(genericArgumentFactories: true)
-class BiliBiliListResponse<T> {
+class BiliBiliResponse<T> {
   final int code;
   final String message;
-  final List<T>? data;
+  final T? data;
   final int? ttl;
 
-  BiliBiliListResponse(
+  BiliBiliResponse(
       {required this.code, required this.message, this.data, this.ttl});
 
-  factory BiliBiliListResponse.fromJson(
+  bool get success => code == 0;
+
+  factory BiliBiliResponse.fromJson(
           Map<String, dynamic> srcJson, T Function(dynamic json) srcJsonT) =>
-      _$BiliBiliListResponseFromJson(srcJson, srcJsonT);
+      _$BiliBiliResponseFromJson(srcJson, srcJsonT);
 
   Map<String, dynamic> toJson(Object? Function(T value) toJsonT) =>
-      _$BiliBiliListResponseToJson(this, toJsonT);
+      _$BiliBiliResponseToJson(this, toJsonT);
 }

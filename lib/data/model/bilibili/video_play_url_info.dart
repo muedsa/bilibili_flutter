@@ -1,4 +1,5 @@
-import 'package:bilibili_flutter/data/model/media_format.dart';
+import 'package:bilibili_flutter/data/model/bilibili/media_format.dart';
+import 'package:bilibili_flutter/data/model/bilibili/video_dash_info.dart';
 import 'package:json_annotation/json_annotation.dart';
 
 part 'video_play_url_info.g.dart';
@@ -12,7 +13,7 @@ class VideoPlayUrlInfo {
   @JsonKey(name: 'accept_format')
   final String acceptFormat;
 
-  @JsonKey(name: 'acceptDescription')
+  @JsonKey(name: 'accept_description')
   final List<String> acceptDescription;
 
   @JsonKey(name: 'accept_quality')
@@ -28,7 +29,7 @@ class VideoPlayUrlInfo {
   final String seekType;
 
   @JsonKey(name: 'dash')
-  final VideoPlayUrlInfo dash;
+  final VideoDashInfo dash;
 
   @JsonKey(name: 'support_formats')
   final List<MediaFormat> supportFormats;
@@ -39,23 +40,23 @@ class VideoPlayUrlInfo {
   @JsonKey(name: 'last_play_cid')
   final int lastPlayCid;
 
-  VideoPlayUrlInfo({
-    required this.quality,
-    required this.format,
-    required this.acceptFormat,
-    required this.timeLength,
-    required this.acceptDescription,
-    required this.acceptQuality,
-    required this.videoCodeCid,
-    required this.seekParam,
-    required this.seekType,
-    required this.dash,
-    required this.supportFormats,
-    required this.lastPlayTime,
-    required this.lastPlayCid
-  });
+  VideoPlayUrlInfo(
+      {required this.quality,
+      required this.format,
+      required this.acceptFormat,
+      required this.timeLength,
+      required this.acceptDescription,
+      required this.acceptQuality,
+      required this.videoCodeCid,
+      required this.seekParam,
+      required this.seekType,
+      required this.dash,
+      required this.supportFormats,
+      required this.lastPlayTime,
+      required this.lastPlayCid});
 
-  factory VideoPlayUrlInfo.fromJson(Map<String, dynamic> srcJson) => _$VideoPlayUrlInfoFromJson(srcJson);
+  factory VideoPlayUrlInfo.fromJson(Map<String, dynamic> srcJson) =>
+      _$VideoPlayUrlInfoFromJson(srcJson);
 
   Map<String, dynamic> toJson() => _$VideoPlayUrlInfoToJson(this);
 }

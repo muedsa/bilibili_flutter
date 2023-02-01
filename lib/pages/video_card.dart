@@ -1,14 +1,18 @@
-import 'package:flutter/material.dart';
-import 'package:bilibili_flutter/widgets/d_pad_control_focus.dart';
-import 'package:bilibili_flutter/widgets/card.dart';
+import 'package:bilibili_flutter/data/model/video_media_info.dart';
+import 'package:bilibili_flutter/data/repository/bilibili.dart';
 import 'package:bilibili_flutter/pages/player_page.dart';
+import 'package:bilibili_flutter/utils.dart';
+import 'package:bilibili_flutter/widgets/card.dart';
+import 'package:bilibili_flutter/widgets/d_pad_control_focus.dart';
+import 'package:flutter/material.dart';
+import 'package:flutter_bloc/flutter_bloc.dart';
 
 class VideoCard extends StatefulWidget {
-
   static const double coverAspectRatio = 16.0 / 9.0;
 
   const VideoCard({
     required this.bv,
+    required this.cid,
     required this.coverUrl,
     required this.title,
     this.titleStyle,
@@ -21,6 +25,7 @@ class VideoCard extends StatefulWidget {
   });
 
   final String bv;
+  final int cid;
   final String coverUrl;
   final String title;
   final TextStyle? titleStyle;
@@ -47,8 +52,22 @@ class _VideoCardState extends State<VideoCard> {
             focused = hasFocused;
           });
         },
-        onTap: (){
-          Navigator.pushNamed(context, BilibiliVideoPlayerPage.routeName, arguments: widget.bv);
+        onTap: () {
+          BilibiliRepository repository =
+              RepositoryProvider.of<BilibiliRepository>(context);
+          repository.getDashVideoPlayUrl(widget.bv, widget.cid).then((m) {
+            if (m.success && m.data != null) {
+              Navigator.pushNamed(context, BilibiliVideoPlayerPage.routeName,
+                  arguments: VideoMediaInfo(
+                      title: widget.title,
+                      subtitle: widget.author,
+                      mediaUrl: m.data!,
+                      mediaHttpHeaders: <String, String>{
+                        HttpHeaderUtils.referrer:
+                            'https://www.bilibili.com/video/${widget.bv}'
+                      }));
+            }
+          });
         },
         child: SimpleImageCard(
           imageUrl: widget.coverUrl,

@@ -1,14 +1,16 @@
 import 'dart:io';
+
+import 'package:bilibili_flutter/data/model/video_media_info.dart';
+import 'package:bilibili_flutter/widgets/adaptive_player.dart';
 import 'package:flutter/material.dart';
 import 'package:video_player/video_player.dart';
-import 'package:bilibili_flutter/widgets/adaptive_player.dart';
 
 class BilibiliVideoPlayerPage extends StatefulWidget {
   static const String routeName = 'bilibiliVideoPlayer';
 
-  const BilibiliVideoPlayerPage({required this.bv, super.key});
+  const BilibiliVideoPlayerPage({required this.videoMediaInfo, super.key});
 
-  final String bv;
+  final VideoMediaInfo videoMediaInfo;
 
   @override
   State<StatefulWidget> createState() => _BilibiliVideoPlayerPageState();
@@ -21,19 +23,16 @@ class _BilibiliVideoPlayerPageState extends State<BilibiliVideoPlayerPage> {
   void initState() {
     super.initState();
     _controller = AdaptivePlayerController(
-        title: widget.bv,
-        subTitle: widget.bv,
-        mediaUrl: 'https://work.muedsa.com/bilibili/dash/${widget.bv}.mbp',
-        httpHeaders: <String, String>{
-          'referer': 'https://www.bilibili.com/video/${widget.bv}'
-        },
+        title: widget.videoMediaInfo.title,
+        subTitle: widget.videoMediaInfo.subtitle,
+        mediaUrl: widget.videoMediaInfo.mediaUrl,
+        httpHeaders: widget.videoMediaInfo.mediaHttpHeaders,
         formatHint: VideoFormat.dash);
     _controller.initialize().then((_) {
       setState(() {});
       _controller.play();
     });
   }
-
 
   @override
   void dispose() {
