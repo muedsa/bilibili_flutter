@@ -1,5 +1,6 @@
 import 'package:bilibili_flutter/data/convert/video_convert.dart';
 import 'package:bilibili_flutter/data/model/bilibili/bilibili_response.dart';
+import 'package:bilibili_flutter/data/model/bilibili/danmaku/danmaku.pbserver.dart';
 import 'package:bilibili_flutter/data/model/bilibili/mw_list_response.dart';
 import 'package:bilibili_flutter/data/model/bilibili/recommended_video.dart';
 import 'package:bilibili_flutter/data/model/bilibili/video_play_url_info.dart';
@@ -40,8 +41,13 @@ class BilibiliRepository {
     return response.success
         ? response.data?.dash == null
             ? ActionMessage.f<String>('unknown error')
-            : ActionMessage.s<String>(
-                VideoConvert.getDashMediaUrl(response.data!.dash, qn, codec))
+            : ActionMessage.s<String>(VideoConvert.getDashMediaUrl(
+                response.data!.dash.filterVideoAudio(qn, codec)))
         : ActionMessage.f<String>(response.message);
+  }
+
+  Future<DmWebViewReply> fetchVideoDanmakuView(int oid) async {
+    final List<int> buffer = await provider.fetchVideoDanmakuView(oid);
+    return DmWebViewReply.fromBuffer(buffer);
   }
 }

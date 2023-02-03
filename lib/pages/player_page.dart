@@ -29,9 +29,10 @@ class _BilibiliVideoPlayerPageState extends State<BilibiliVideoPlayerPage> {
         httpHeaders: widget.videoMediaInfo.mediaHttpHeaders,
         formatHint: VideoFormat.dash);
     _controller.initialize().then((_) {
-      setState(() {});
       _controller.play();
+      setState(() {});
     });
+    WidgetsBinding.instance.addPostFrameCallback((_) {});
   }
 
   @override

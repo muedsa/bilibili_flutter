@@ -7,6 +7,7 @@ import 'package:bilibili_flutter/widgets/other_widget.dart';
 import 'package:dart_vlc/dart_vlc.dart';
 import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
+import 'package:flutter_danmaku/flutter_danmaku.dart';
 import 'package:video_player/video_player.dart';
 
 class AdaptivePlayer extends StatefulWidget {
@@ -15,11 +16,22 @@ class AdaptivePlayer extends StatefulWidget {
   final AdaptivePlayerController controller;
 
   @override
-  State<StatefulWidget> createState() => _AdaptivePlayer();
+  State<StatefulWidget> createState() => _AdaptivePlayerState();
 }
 
-class _AdaptivePlayer extends State<AdaptivePlayer> {
+class _AdaptivePlayerState extends State<AdaptivePlayer> {
   late final FocusNode _focusNode;
+
+  bool get ready =>
+      (widget.controller._videoPlayerController != null &&
+          widget.controller._videoPlayerController!.value.isInitialized) ||
+      widget.controller._vlcPlayer != null;
+
+  // 幕布尺寸
+  Size get areaSize {
+    Size size = MediaQuery.of(context).size;
+    return Size(size.width, size.height);
+  }
 
   @override
   void initState() {
@@ -27,50 +39,53 @@ class _AdaptivePlayer extends State<AdaptivePlayer> {
     _focusNode = FocusNode();
     WidgetsBinding.instance.addPostFrameCallback((timeStamp) {
       FocusScope.of(context).requestFocus(_focusNode);
+      widget.controller._danmakuController.init(areaSize);
     });
   }
 
   @override
   Widget build(BuildContext context) {
-    late Widget w;
-    if (widget.controller.type == AdaptivePlayerType.dartVlc) {
-      w = SimpleDPadFocusTap(
-          focusNode: _focusNode,
-          onTap: () {
+    return _buildPlayerControllerView(Stack(
+      children: [_buildPlayerView(), _buildDanmakuView()],
+    ));
+  }
+
+  Widget _buildPlayerView() {
+    late Widget view;
+    if (widget.controller.type == AdaptivePlayerType.videoPlayer) {
+      view = Center(
+          child: AspectRatio(
+        aspectRatio:
+            widget.controller._videoPlayerController!.value.aspectRatio,
+        child: VideoPlayer(widget.controller._videoPlayerController!),
+      ));
+    } else if (widget.controller.type == AdaptivePlayerType.dartVlc) {
+      view = Video(player: widget.controller._vlcPlayer, showControls: false);
+    } else {
+      view = MessageWidget.unsupported;
+    }
+    return view;
+  }
+
+  Widget _buildDanmakuView() {
+    return FlutterDanmakuArea(controller: widget.controller._danmakuController);
+  }
+
+  Widget _buildPlayerControllerView(Widget child) {
+    return SimpleDPadFocusTap(
+        focusNode: _focusNode,
+        onTap: () {
+          Navigator.of(context)
+              .push(PlayerControllerPopupRoute(widget.controller));
+        },
+        onDPadKey: (type, key, count) {
+          if (type == DPadControlKeyEventType.up &&
+              key != DPadControlKey.select) {
             Navigator.of(context)
                 .push(PlayerControllerPopupRoute(widget.controller));
-          },
-          onDPadKey: (type, key, count) {
-            if (type == DPadControlKeyEventType.up &&
-                key != DPadControlKey.select) {
-              Navigator.of(context)
-                  .push(PlayerControllerPopupRoute(widget.controller));
-            }
-          },
-          child:
-              Video(player: widget.controller._vlcPlayer, showControls: false));
-    } else if (widget.controller.type == AdaptivePlayerType.videoPlayer) {
-      w = widget.controller._videoPlayerController != null &&
-              widget.controller._videoPlayerController!.value.isInitialized
-          ? SimpleDPadFocusTap(
-              focusNode: _focusNode,
-              onTap: () {
-                Navigator.of(context)
-                    .push(PlayerControllerPopupRoute(widget.controller));
-              },
-              onDPadKey: (type, key, count) {
-                if (type == DPadControlKeyEventType.up &&
-                    key != DPadControlKey.select) {
-                  Navigator.of(context)
-                      .push(PlayerControllerPopupRoute(widget.controller));
-                }
-              },
-              child: VideoPlayer(widget.controller._videoPlayerController!))
-          : MessageWidget.loading;
-    } else {
-      w = MessageWidget.unsupported;
-    }
-    return w;
+          }
+        },
+        child: child);
   }
 }
 
@@ -94,9 +109,11 @@ class AdaptivePlayerController {
   AdaptivePlayerType type;
   Player? _vlcPlayer;
   VideoPlayerController? _videoPlayerController;
+  final FlutterDanmakuController _danmakuController =
+      FlutterDanmakuController();
 
   Future<void> initialize() async {
-    debugPrint('player mediaUrl:$mediaUrl');
+    debugPrint('player mediaUrl: $mediaUrl');
     if (kIsWeb) {
       type = AdaptivePlayerType.videoPlayer;
     } else {
@@ -108,9 +125,14 @@ class AdaptivePlayerController {
     }
     if (type == AdaptivePlayerType.dartVlc) {
       _vlcPlayer = Player(id: 23333, commandlineArguments: [
-        '--http-referrer=${HttpHeaderUtils.getValue(httpHeaders, HttpHeaderUtils.referrer)}'
+        '--http-referrer=${HttpHeaderUtils.getValue(httpHeaders, HttpHeaderUtils.referer)}',
       ]);
-      _vlcPlayer?.open(Media.network(mediaUrl, parse: true));
+      _vlcPlayer?.setUserAgent(
+          HttpHeaderUtils.getValue(httpHeaders, HttpHeaderUtils.userAgent) ??
+              HttpHeaderUtils.chromeUserAgent);
+      debugPrint(
+          'vlc commandlineArguments: ${_vlcPlayer?.commandlineArguments.toString()}');
+      _vlcPlayer?.open(Media.network(mediaUrl, parse: true), autoStart: true);
     } else if (type == AdaptivePlayerType.videoPlayer) {
       _videoPlayerController = VideoPlayerController.network(mediaUrl,
           formatHint: formatHint, httpHeaders: httpHeaders);
@@ -124,6 +146,7 @@ class AdaptivePlayerController {
     } else if (type == AdaptivePlayerType.videoPlayer) {
       await _videoPlayerController?.dispose();
     }
+    _danmakuController.dispose();
   }
 
   Future<void> play() async {
@@ -132,6 +155,7 @@ class AdaptivePlayerController {
     } else if (type == AdaptivePlayerType.videoPlayer) {
       await _videoPlayerController?.play();
     }
+    _danmakuController.play();
   }
 
   Future<void> pause() async {
@@ -140,6 +164,7 @@ class AdaptivePlayerController {
     } else if (type == AdaptivePlayerType.videoPlayer) {
       await _videoPlayerController?.pause();
     }
+    _danmakuController.pause();
   }
 
   Future<void> seekTo(Duration position) async {
@@ -148,6 +173,7 @@ class AdaptivePlayerController {
     } else if (type == AdaptivePlayerType.videoPlayer) {
       await _videoPlayerController?.seekTo(position);
     }
+    // todo _danmakuController seek
   }
 
   bool get isPlaying {
@@ -166,6 +192,10 @@ class AdaptivePlayerController {
       return _videoPlayerController?.position;
     }
     return null;
+  }
+
+  void addDanmaku(String text) {
+    _danmakuController.addDanmaku(text);
   }
 }
 

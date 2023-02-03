@@ -63,8 +63,10 @@ class _VideoCardState extends State<VideoCard> {
                       subtitle: widget.author,
                       mediaUrl: m.data!,
                       mediaHttpHeaders: <String, String>{
-                        HttpHeaderUtils.referrer:
-                            'https://www.bilibili.com/video/${widget.bv}'
+                        HttpHeaderUtils.referer:
+                            'https://www.bilibili.com/video/${widget.bv}',
+                        HttpHeaderUtils.userAgent:
+                            HttpHeaderUtils.chromeUserAgent
                       }));
             }
           });

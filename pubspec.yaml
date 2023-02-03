@@ -43,11 +43,19 @@ dependencies:
   dio: ^4.0.6
   video_player: ^2.4.10
   auto_size_text: ^3.0.0
-  dart_vlc: ^0.4.0
+  dart_vlc:
+    git:
+      url: https://github.com/alexmercerind/dart_vlc.git
+      ref: master
   build_runner: ^2.3.3
   sprintf: ^7.0.0
   google_fonts: ^4.0.1
   lzstring: ^2.0.0+2
+  protobuf: ^2.1.0
+  flutter_danmaku:
+    git:
+      url: https://github.com/MUedsa/flutter_danmaku.git
+      ref: main
 
 dev_dependencies:
   flutter_test:

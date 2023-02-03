@@ -39,20 +39,20 @@ class MyApp extends StatelessWidget {
   Widget build(BuildContext context) {
     return DPadControlShortcuts(
         child: MaterialApp(
-      theme: ThemeData(
-        brightness: Brightness.dark,
-        primaryColor: Colors.grey[850],
-        fontFamily: 'Sans-serif',
-      ),
-      initialRoute: MainPage.routeName,
-      routes: {
-        MainPage.routeName: (context) => const MainPage(),
-        BilibiliVideoPlayerPage.routeName: (context) {
-          return BilibiliVideoPlayerPage(
-              videoMediaInfo:
+          theme: ThemeData(
+            brightness: Brightness.dark,
+            primaryColor: Colors.grey[850],
+            fontFamily: 'Sans-serif',
+          ),
+          initialRoute: MainPage.routeName,
+          routes: {
+            MainPage.routeName: (context) => const MainPage(),
+            BilibiliVideoPlayerPage.routeName: (context) {
+              return BilibiliVideoPlayerPage(
+                  videoMediaInfo:
                   ModalRoute.of(context)!.settings.arguments as VideoMediaInfo);
-        }
-      },
-    ));
+            }
+          },
+        ));
   }
 }
