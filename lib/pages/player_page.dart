@@ -1,16 +1,18 @@
 import 'dart:io';
 
-import 'package:bilibili_flutter/data/model/video_media_info.dart';
+import 'package:bilibili_flutter/data/model/bilibili/danmaku/danmaku.pb.dart';
+import 'package:bilibili_flutter/data/model/video_play_info.dart';
 import 'package:bilibili_flutter/widgets/adaptive_player.dart';
 import 'package:flutter/material.dart';
+import 'package:flutter_danmaku/flutter_danmaku.dart';
 import 'package:video_player/video_player.dart';
 
 class BilibiliVideoPlayerPage extends StatefulWidget {
   static const String routeName = 'bilibiliVideoPlayer';
 
-  const BilibiliVideoPlayerPage({required this.videoMediaInfo, super.key});
+  const BilibiliVideoPlayerPage({required this.videoPlayInfo, super.key});
 
-  final VideoMediaInfo videoMediaInfo;
+  final VideoPlayInfo videoPlayInfo;
 
   @override
   State<StatefulWidget> createState() => _BilibiliVideoPlayerPageState();
@@ -23,16 +25,30 @@ class _BilibiliVideoPlayerPageState extends State<BilibiliVideoPlayerPage> {
   void initState() {
     super.initState();
     _controller = AdaptivePlayerController(
-        title: widget.videoMediaInfo.title,
-        subTitle: widget.videoMediaInfo.subtitle,
-        mediaUrl: widget.videoMediaInfo.mediaUrl,
-        httpHeaders: widget.videoMediaInfo.mediaHttpHeaders,
-        formatHint: VideoFormat.dash);
+        title: widget.videoPlayInfo.title,
+        subTitle: widget.videoPlayInfo.subtitle,
+        mediaUrl: widget.videoPlayInfo.mediaUrl,
+        httpHeaders: widget.videoPlayInfo.mediaHttpHeaders,
+        formatHint: VideoFormat.dash,
+        danmakuReadyCallback: () {
+          for (DanmakuElem element in widget.videoPlayInfo.danmakuList) {
+            //debugPrint(element.toDebugString());
+            if (_controller
+                    .addDanmaku(element.content,
+                        color: Color(element.color),
+                        offsetMS: -1 * element.progress)
+                    .code ==
+                AddBulletResCode.success) {
+              debugPrint("success: ${element.content}, p:${element.progress}");
+            } else {
+              debugPrint("missing: ${element.content}, p:${element.progress}");
+            }
+          }
+        });
     _controller.initialize().then((_) {
       _controller.play();
       setState(() {});
     });
-    WidgetsBinding.instance.addPostFrameCallback((_) {});
   }
 
   @override

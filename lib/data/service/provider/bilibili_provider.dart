@@ -69,4 +69,25 @@ class BilibiliProvider {
       return [];
     }
   }
+
+  Future<List<int>> fetchVideoDanmakuSegment(int oid, int segmentIndex) async {
+    try {
+      String url =
+          sprintf(BilibiliURL.videoDanmakuSegment, [oid, segmentIndex]);
+      Response response = await _httpApiClient.dio
+          .get(url, options: Options(responseType: ResponseType.bytes));
+      if (response.statusCode == HttpStatus.ok) {
+        if (response.data != null) {
+          return response.data;
+        }
+      } else {
+        debugPrint(
+            "fetchVideoDanmakuSegment http status error, ${response.statusCode} ${response.statusMessage}");
+      }
+      return [];
+    } on DioError catch (e) {
+      debugPrint("fetchVideoDanmakuSegment error, ${e.error}");
+      return [];
+    }
+  }
 }

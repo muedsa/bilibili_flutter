@@ -39,7 +39,11 @@ class _AdaptivePlayerState extends State<AdaptivePlayer> {
     _focusNode = FocusNode();
     WidgetsBinding.instance.addPostFrameCallback((timeStamp) {
       FocusScope.of(context).requestFocus(_focusNode);
+      widget.controller._danmakuController.changeLableSize(25);
+      widget.controller._danmakuController.changeShowArea(0.5);
       widget.controller._danmakuController.init(areaSize);
+      widget.controller._danmakuController.pause();
+      widget.controller.danmakuReadyCallback?.call();
     });
   }
 
@@ -98,6 +102,7 @@ class AdaptivePlayerController {
     this.formatHint,
     required this.title,
     required this.subTitle,
+    this.danmakuReadyCallback,
   }) : type = AdaptivePlayerType.unsupported;
 
   final String mediaUrl;
@@ -105,6 +110,7 @@ class AdaptivePlayerController {
   final VideoFormat? formatHint;
   final String title;
   final String subTitle;
+  final Function? danmakuReadyCallback;
 
   AdaptivePlayerType type;
   Player? _vlcPlayer;
@@ -194,8 +200,15 @@ class AdaptivePlayerController {
     return null;
   }
 
-  void addDanmaku(String text) {
-    _danmakuController.addDanmaku(text);
+  AddBulletResBody addDanmaku(String text,
+      {FlutterDanmakuBulletType bulletType = FlutterDanmakuBulletType.scroll,
+      Color? color,
+      Widget Function(Text)? builder,
+      int? offsetMS,
+      FlutterDanmakuBulletPosition position =
+          FlutterDanmakuBulletPosition.any}) {
+    return _danmakuController.addDanmaku(text,
+        color: color, builder: builder, offsetMS: offsetMS, position: position);
   }
 }
 

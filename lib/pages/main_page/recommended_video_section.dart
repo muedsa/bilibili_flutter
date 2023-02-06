@@ -43,6 +43,8 @@ class _RecommendedVideoSectionState extends State<RecommendedVideoSection> {
                 bv: recommendedVideo.bv,
                 cid: recommendedVideo.cid,
                 coverUrl: recommendedVideo.coverUrl,
+                danmakuSegmentSize:
+                    (recommendedVideo.duration / (6 * 60)).ceil(),
                 title: recommendedVideo.title,
                 titleStyle: titleStyle,
                 author: recommendedVideo.author,

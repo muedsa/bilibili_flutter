@@ -5,11 +5,9 @@ class ActionMessage<T> {
 
   ActionMessage({required this.success, this.message, this.data});
 
-  static ActionMessage<T> s<T>(data) {
-    return ActionMessage<T>(success: true, data: data);
-  }
+  static ActionMessage<T> s<T>(data) =>
+      ActionMessage<T>(success: true, data: data);
 
-  static ActionMessage<T> f<T>(message) {
-    return ActionMessage<T>(success: false, message: message);
-  }
+  static ActionMessage<T> f<T>(message) =>
+      ActionMessage<T>(success: false, message: message);
 }

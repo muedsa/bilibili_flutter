@@ -1,4 +1,5 @@
-import 'package:bilibili_flutter/data/model/video_media_info.dart';
+import 'package:bilibili_flutter/data/convert/video_convert.dart';
+import 'package:bilibili_flutter/data/model/video_play_info.dart';
 import 'package:bilibili_flutter/data/repository/bilibili.dart';
 import 'package:bilibili_flutter/pages/player_page.dart';
 import 'package:bilibili_flutter/utils.dart';
@@ -14,6 +15,7 @@ class VideoCard extends StatefulWidget {
     required this.bv,
     required this.cid,
     required this.coverUrl,
+    required this.danmakuSegmentSize,
     required this.title,
     this.titleStyle,
     required this.author,
@@ -27,6 +29,7 @@ class VideoCard extends StatefulWidget {
   final String bv;
   final int cid;
   final String coverUrl;
+  final int danmakuSegmentSize;
   final String title;
   final TextStyle? titleStyle;
   final String author;
@@ -55,19 +58,24 @@ class _VideoCardState extends State<VideoCard> {
         onTap: () {
           BilibiliRepository repository =
               RepositoryProvider.of<BilibiliRepository>(context);
-          repository.getDashVideoPlayUrl(widget.bv, widget.cid).then((m) {
+          repository
+              .getVideoPlayUrlAndDanmakuInfo(
+                  widget.bv, widget.cid, widget.danmakuSegmentSize)
+              .then((m) {
             if (m.success && m.data != null) {
               Navigator.pushNamed(context, BilibiliVideoPlayerPage.routeName,
-                  arguments: VideoMediaInfo(
+                  arguments: VideoPlayInfo(
                       title: widget.title,
                       subtitle: widget.author,
-                      mediaUrl: m.data!,
+                      mediaUrl: VideoConvert.getDashMediaUrl(
+                          m.data!.playUrlInfo.dash),
                       mediaHttpHeaders: <String, String>{
                         HttpHeaderUtils.referer:
                             'https://www.bilibili.com/video/${widget.bv}',
                         HttpHeaderUtils.userAgent:
                             HttpHeaderUtils.chromeUserAgent
-                      }));
+                      },
+                      danmakuList: m.data!.danmakuList));
             }
           });
         },
