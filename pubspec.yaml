@@ -49,7 +49,6 @@ dependencies:
       ref: master
   build_runner: ^2.3.3
   sprintf: ^7.0.0
-  google_fonts: ^4.0.1
   lzstring: ^2.0.0+2
   protobuf: ^2.1.0
   flutter_danmaku:
