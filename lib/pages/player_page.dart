@@ -1,10 +1,8 @@
 import 'dart:io';
 
-import 'package:bilibili_flutter/data/model/bilibili/danmaku/danmaku.pb.dart';
 import 'package:bilibili_flutter/data/model/video_play_info.dart';
 import 'package:bilibili_flutter/widgets/adaptive_player.dart';
 import 'package:flutter/material.dart';
-import 'package:flutter_danmaku/flutter_danmaku.dart';
 import 'package:video_player/video_player.dart';
 
 class BilibiliVideoPlayerPage extends StatefulWidget {
@@ -30,21 +28,7 @@ class _BilibiliVideoPlayerPageState extends State<BilibiliVideoPlayerPage> {
         mediaUrl: widget.videoPlayInfo.mediaUrl,
         httpHeaders: widget.videoPlayInfo.mediaHttpHeaders,
         formatHint: VideoFormat.dash,
-        danmakuReadyCallback: () {
-          for (DanmakuElem element in widget.videoPlayInfo.danmakuList) {
-            //debugPrint(element.toDebugString());
-            if (_controller
-                    .addDanmaku(element.content,
-                        color: Color(element.color),
-                        offsetMS: -1 * element.progress)
-                    .code ==
-                AddBulletResCode.success) {
-              debugPrint("success: ${element.content}, p:${element.progress}");
-            } else {
-              debugPrint("missing: ${element.content}, p:${element.progress}");
-            }
-          }
-        });
+        historyDanmakuList: widget.videoPlayInfo.danmakuList);
     _controller.initialize().then((_) {
       _controller.play();
       setState(() {});

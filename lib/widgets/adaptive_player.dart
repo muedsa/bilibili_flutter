@@ -1,6 +1,7 @@
 import 'dart:async';
 import 'dart:io';
 
+import 'package:bilibili_flutter/data/model/bilibili/danmaku/danmaku.pb.dart';
 import 'package:bilibili_flutter/utils.dart';
 import 'package:bilibili_flutter/widgets/d_pad_control_focus.dart';
 import 'package:bilibili_flutter/widgets/other_widget.dart';
@@ -39,11 +40,7 @@ class _AdaptivePlayerState extends State<AdaptivePlayer> {
     _focusNode = FocusNode();
     WidgetsBinding.instance.addPostFrameCallback((timeStamp) {
       FocusScope.of(context).requestFocus(_focusNode);
-      widget.controller._danmakuController.changeLableSize(25);
-      widget.controller._danmakuController.changeShowArea(0.5);
-      widget.controller._danmakuController.init(areaSize);
-      widget.controller._danmakuController.pause();
-      widget.controller.danmakuReadyCallback?.call();
+      widget.controller._danmakuInit(areaSize);
     });
   }
 
@@ -56,14 +53,14 @@ class _AdaptivePlayerState extends State<AdaptivePlayer> {
 
   Widget _buildPlayerView() {
     late Widget view;
-    if (widget.controller.type == AdaptivePlayerType.videoPlayer) {
+    if (AdaptivePlayerController.type == AdaptivePlayerType.videoPlayer) {
       view = Center(
           child: AspectRatio(
         aspectRatio:
             widget.controller._videoPlayerController!.value.aspectRatio,
         child: VideoPlayer(widget.controller._videoPlayerController!),
       ));
-    } else if (widget.controller.type == AdaptivePlayerType.dartVlc) {
+    } else if (AdaptivePlayerController.type == AdaptivePlayerType.dartVlc) {
       view = Video(player: widget.controller._vlcPlayer, showControls: false);
     } else {
       view = MessageWidget.unsupported;
@@ -96,39 +93,40 @@ class _AdaptivePlayerState extends State<AdaptivePlayer> {
 enum AdaptivePlayerType { unsupported, dartVlc, videoPlayer }
 
 class AdaptivePlayerController {
-  AdaptivePlayerController({
-    required this.mediaUrl,
-    this.httpHeaders = const <String, String>{},
-    this.formatHint,
-    required this.title,
-    required this.subTitle,
-    this.danmakuReadyCallback,
-  }) : type = AdaptivePlayerType.unsupported;
+  AdaptivePlayerController(
+      {required this.mediaUrl,
+      this.httpHeaders = const <String, String>{},
+      this.formatHint,
+      required this.title,
+      required this.subTitle,
+      this.historyDanmakuList = const <DanmakuElem>[]})
+      : _historyDanmakuIndex = 0;
 
   final String mediaUrl;
   final Map<String, String> httpHeaders;
   final VideoFormat? formatHint;
   final String title;
   final String subTitle;
-  final Function? danmakuReadyCallback;
+  final List<DanmakuElem> historyDanmakuList;
 
-  AdaptivePlayerType type;
+  static AdaptivePlayerType type = kIsWeb
+      ? AdaptivePlayerType.videoPlayer
+      : (Platform.isIOS || Platform.isAndroid || Platform.isFuchsia)
+          ? AdaptivePlayerType.videoPlayer
+          : (Platform.isWindows || Platform.isLinux)
+              ? AdaptivePlayerType.dartVlc
+              : AdaptivePlayerType.unsupported;
+
   Player? _vlcPlayer;
   VideoPlayerController? _videoPlayerController;
   final FlutterDanmakuController _danmakuController =
       FlutterDanmakuController();
+  late Timer _danmakuTimer;
+  static const int _danmakuOffsetMs = 20;
+  int _historyDanmakuIndex;
 
   Future<void> initialize() async {
     debugPrint('player mediaUrl: $mediaUrl');
-    if (kIsWeb) {
-      type = AdaptivePlayerType.videoPlayer;
-    } else {
-      if (Platform.isIOS || Platform.isAndroid || Platform.isFuchsia) {
-        type = AdaptivePlayerType.videoPlayer;
-      } else if (Platform.isWindows || Platform.isLinux) {
-        type = AdaptivePlayerType.dartVlc;
-      }
-    }
     if (type == AdaptivePlayerType.dartVlc) {
       _vlcPlayer = Player(id: 23333, commandlineArguments: [
         '--http-referrer=${HttpHeaderUtils.getValue(httpHeaders, HttpHeaderUtils.referer)}',
@@ -146,13 +144,24 @@ class AdaptivePlayerController {
     }
   }
 
+  void _danmakuInit(Size size) {
+    _danmakuController.changeLableSize(25);
+    _danmakuController.changeShowArea(0.5);
+    _danmakuController.init(size);
+    _danmakuTimer =
+        Timer.periodic(const Duration(milliseconds: _danmakuOffsetMs), (timer) {
+      _danmakuTickUpdate(timer.tick);
+    });
+  }
+
   Future<void> dispose() async {
+    _danmakuTimer.cancel();
+    _danmakuController.dispose();
     if (type == AdaptivePlayerType.dartVlc) {
       _vlcPlayer?.dispose();
     } else if (type == AdaptivePlayerType.videoPlayer) {
       await _videoPlayerController?.dispose();
     }
-    _danmakuController.dispose();
   }
 
   Future<void> play() async {
@@ -209,6 +218,46 @@ class AdaptivePlayerController {
           FlutterDanmakuBulletPosition.any}) {
     return _danmakuController.addDanmaku(text,
         color: color, builder: builder, offsetMS: offsetMS, position: position);
+  }
+
+  void _danmakuTickUpdate(int tick) {
+    //debugPrint('_danmakuTickUpdate $tick');
+    if (historyDanmakuList.isNotEmpty || isPlaying) {
+      position.then((p) {
+        if (p != null) {
+          int curPosition = p.inMilliseconds;
+          for (int i = _historyDanmakuIndex + 1;
+              i < historyDanmakuList.length;
+              i++) {
+            DanmakuElem danmakuElem = historyDanmakuList[i];
+            if (danmakuElem.progress <= curPosition) {
+              _historyDanmakuIndex = i;
+              addDanmaku(danmakuElem.content,
+                  color: Color(danmakuElem.color),
+                  offsetMS: curPosition - danmakuElem.progress,
+                  builder: (Text textWidget) => Text(
+                        textWidget.data!,
+                        style: TextStyle(
+                            fontSize: textWidget.style!.fontSize,
+                            color: textWidget.style!.color,
+                            shadows: const [
+                              Shadow(
+                                color: Colors.black,
+                                offset: Offset(1, 1),
+                              ),
+                              Shadow(
+                                color: Colors.black,
+                                offset: Offset(-1, -1),
+                              ),
+                            ]),
+                      ));
+            } else {
+              break;
+            }
+          }
+        }
+      });
+    }
   }
 }
 
@@ -431,11 +480,11 @@ class _AdaptivePlayerProgressBarState
 
   Widget _buildProgressBar() {
     late Widget w;
-    if (widget._controller.type == AdaptivePlayerType.videoPlayer &&
+    if (AdaptivePlayerController.type == AdaptivePlayerType.videoPlayer &&
         widget._controller._videoPlayerController != null) {
       w = VideoProgressIndicator(widget._controller._videoPlayerController!,
           colors: focused ? focusedColors : colors, allowScrubbing: true);
-    } else if (widget._controller.type == AdaptivePlayerType.dartVlc &&
+    } else if (AdaptivePlayerController.type == AdaptivePlayerType.dartVlc &&
         widget._controller._vlcPlayer != null) {
       w = Padding(
         padding: const EdgeInsets.only(top: 5.0),

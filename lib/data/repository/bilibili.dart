@@ -1,4 +1,3 @@
-import 'package:bilibili_flutter/data/convert/video_convert.dart';
 import 'package:bilibili_flutter/data/model/bilibili/bilibili_response.dart';
 import 'package:bilibili_flutter/data/model/bilibili/danmaku/danmaku.pbserver.dart';
 import 'package:bilibili_flutter/data/model/bilibili/mw_list_response.dart';
@@ -35,22 +34,10 @@ class BilibiliRepository {
         jsonResponse, (json) => VideoPlayUrlInfo.fromJson(json));
   }
 
-  Future<ActionMessage<String>> getDashVideoPlayUrl(String bv, int cid,
-      {int? qn, String? codec}) async {
-    BiliBiliResponse<VideoPlayUrlInfo> response =
-        await fetchVideoPlayUrlInfo(bv, cid);
-    return response.success
-        ? response.data?.dash == null
-            ? ActionMessage.f<String>('unknown error')
-            : ActionMessage.s<String>(VideoConvert.getDashMediaUrl(
-                response.data!.dash.filterVideoAudio(qn, codec)))
-        : ActionMessage.f<String>(response.message);
-  }
-
-  Future<DmWebViewReply> fetchVideoDanmakuView(int oid) async {
-    final List<int> buffer = await provider.fetchVideoDanmakuView(oid);
-    return DmWebViewReply.fromBuffer(buffer);
-  }
+  // Future<DmWebViewReply> fetchVideoDanmakuView(int oid) async {
+  //   final List<int> buffer = await provider.fetchVideoDanmakuView(oid);
+  //   return DmWebViewReply.fromBuffer(buffer);
+  // }
 
   Future<DmSegMobileReply> fetchVideoDanmakuSegment(
       int oid, int segmentIndex) async {
