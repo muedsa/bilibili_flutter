@@ -5,12 +5,12 @@ class HttpApiClient {
   final dio = createDio("");
 }
 
-Dio createDio(String baseUrl){
-  Dio dio =  Dio(BaseOptions(
+Dio createDio(String baseUrl) {
+  Dio dio = Dio(BaseOptions(
     baseUrl: baseUrl,
-    receiveTimeout: 5000,
-    connectTimeout: 3000,
-    sendTimeout: 5000,
+    connectTimeout: const Duration(seconds: 3),
+    receiveTimeout: const Duration(seconds: 5),
+    sendTimeout: const Duration(seconds: 5),
   ));
   //dio.interceptors.add(AppInterceptors(dio));
   return dio;
@@ -33,8 +33,7 @@ class AppInterceptors extends Interceptor {
   }
 
   @override
-  void onResponse(
-      Response response, ResponseInterceptorHandler handler) async {
+  void onResponse(Response response, ResponseInterceptorHandler handler) async {
     return handler.next(response);
   }
 }
