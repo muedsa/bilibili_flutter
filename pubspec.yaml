@@ -38,7 +38,7 @@ dependencies:
   cupertino_icons: ^1.0.2
   cached_network_image: ^3.2.3
   flutter_bloc: ^8.1.2
-  json_serializable: ^6.5.4
+  json_serializable: ^6.6.2
   json_annotation: ^4.7.0
   dio: ^5.1.1
   video_player: ^2.6.1
