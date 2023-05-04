@@ -39,7 +39,7 @@ dependencies:
   cached_network_image: ^3.2.3
   flutter_bloc: ^8.1.2
   json_serializable: ^6.5.4
-  json_annotation: ^4.7.0
+  json_annotation: ^4.8.1
   dio: ^5.1.1
   video_player: ^2.6.1
   auto_size_text: ^3.0.0
