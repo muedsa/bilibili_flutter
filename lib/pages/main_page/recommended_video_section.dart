@@ -1,5 +1,5 @@
-import 'package:bilibili_flutter/cubit/recommended_video_list_cubit.dart';
-import 'package:bilibili_flutter/data/model/bilibili/recommended_video.dart';
+import 'package:bilibili_flutter/cubit/recommend_video_list_cubit.dart';
+import 'package:bilibili_flutter/data/model/bilibili/recommend_video.dart';
 import 'package:bilibili_flutter/pages/video_card.dart';
 import 'package:bilibili_flutter/widgets/card.dart';
 import 'package:bilibili_flutter/widgets/other_widget.dart';
@@ -17,8 +17,8 @@ class _RecommendedVideoSectionState extends State<RecommendedVideoSection> {
   @override
   Widget build(BuildContext context) {
     BlocProvider.of<RecommendedVideoListCubit>(context)
-        .loadRecommendedVideoList();
-    return BlocConsumer<RecommendedVideoListCubit, List<RecommendedVideo>>(
+        .loadRecommendVideoList(1, 20);
+    return BlocConsumer<RecommendedVideoListCubit, List<RecommendVideo>>(
         builder: (context, state) {
           if (state.isEmpty) {
             return const LoadingWidget();
@@ -40,14 +40,14 @@ class _RecommendedVideoSectionState extends State<RecommendedVideoSection> {
                 SimpleImageCard.padding * 2;
             List<Widget> children = state.map((recommendedVideo) {
               return VideoCard(
-                bv: recommendedVideo.bv,
+                bv: recommendedVideo.bvid,
                 cid: recommendedVideo.cid,
-                coverUrl: recommendedVideo.coverUrl,
+                coverUrl: recommendedVideo.pic,
                 danmakuSegmentSize:
                     (recommendedVideo.duration / (6 * 60)).ceil(),
                 title: recommendedVideo.title,
                 titleStyle: titleStyle,
-                author: recommendedVideo.author,
+                author: recommendedVideo.owner.name,
                 authorStyle: contentStyle,
                 textBoxHeight: textBoxHeight,
               );

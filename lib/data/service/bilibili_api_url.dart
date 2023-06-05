@@ -1,4 +1,7 @@
 class BilibiliURL {
+  static const String recommendedVideos =
+      'https://api.bilibili.com/x/web-interface/popular?pn=%d&ps=%d';
+
   static const String liveRoomPlayUrl =
       'https://api.live.bilibili.com/room/v1/Room/playUrl?cid=%d&qn=%d&platform=android';
 

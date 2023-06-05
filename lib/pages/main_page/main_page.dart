@@ -1,5 +1,5 @@
 import 'package:auto_size_text/auto_size_text.dart';
-import 'package:bilibili_flutter/cubit/recommended_video_list_cubit.dart';
+import 'package:bilibili_flutter/cubit/recommend_video_list_cubit.dart';
 import 'package:bilibili_flutter/data/repository/bilibili.dart';
 import 'package:bilibili_flutter/pages/main_page/recommended_video_section.dart';
 import 'package:bilibili_flutter/widgets/other_widget.dart';

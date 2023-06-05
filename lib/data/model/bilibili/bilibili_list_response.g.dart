@@ -6,19 +6,19 @@ part of 'bilibili_list_response.dart';
 // JsonSerializableGenerator
 // **************************************************************************
 
-BiliBiliListResponse<T> _$BiliBiliListResponseFromJson<T>(
+BilibiliListResponse<T> _$BilibiliListResponseFromJson<T>(
   Map<String, dynamic> json,
   T Function(Object? json) fromJsonT,
 ) =>
-    BiliBiliListResponse<T>(
+    BilibiliListResponse<T>(
       code: json['code'] as int,
       message: json['message'] as String,
       data: (json['data'] as List<dynamic>?)?.map(fromJsonT).toList(),
       ttl: json['ttl'] as int?,
     );
 
-Map<String, dynamic> _$BiliBiliListResponseToJson<T>(
-  BiliBiliListResponse<T> instance,
+Map<String, dynamic> _$BilibiliListResponseToJson<T>(
+  BilibiliListResponse<T> instance,
   Object? Function(T value) toJsonT,
 ) =>
     <String, dynamic>{

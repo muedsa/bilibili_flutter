@@ -2,7 +2,6 @@ import 'dart:io';
 
 import 'package:bilibili_flutter/data/service/api_client.dart';
 import 'package:bilibili_flutter/data/service/bilibili_api_url.dart';
-import 'package:bilibili_flutter/data/service/muedsa_worker_api_url.dart';
 import 'package:dio/dio.dart';
 import 'package:flutter/foundation.dart';
 import 'package:sprintf/sprintf.dart';
@@ -12,10 +11,11 @@ class BilibiliProvider {
 
   BilibiliProvider(this._httpApiClient);
 
-  Future<Map<String, dynamic>> fetchRecommendedVideos() async {
+  Future<Map<String, dynamic>> fetchRecommendedVideos(
+      int pageNum, int pageSize) async {
     try {
-      Response response = await _httpApiClient.dio
-          .get(MuedsaWorkerUrl.bilibiliRecommendedVideos);
+      String url = sprintf(BilibiliURL.recommendedVideos, [pageNum, pageSize]);
+      Response response = await _httpApiClient.dio.get(url);
       if (response.statusCode == HttpStatus.ok) {
         if (response.data != null) {
           return response.data;

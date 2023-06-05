@@ -1,7 +1,7 @@
+import 'package:bilibili_flutter/data/model/bilibili/bilibili_list.dart';
 import 'package:bilibili_flutter/data/model/bilibili/bilibili_response.dart';
 import 'package:bilibili_flutter/data/model/bilibili/danmaku/danmaku.pbserver.dart';
-import 'package:bilibili_flutter/data/model/bilibili/mw_list_response.dart';
-import 'package:bilibili_flutter/data/model/bilibili/recommended_video.dart';
+import 'package:bilibili_flutter/data/model/bilibili/recommend_video.dart';
 import 'package:bilibili_flutter/data/model/bilibili/video_play_url_info.dart';
 import 'package:bilibili_flutter/data/model/message.dart';
 import 'package:bilibili_flutter/data/model/video_play_url_and_danmaku_info.dart';
@@ -12,25 +12,23 @@ class BilibiliRepository {
 
   BilibiliRepository(this.provider);
 
-  Future<List<RecommendedVideo>> fetchRecommendedVideos() async {
+  Future<List<RecommendVideo>> fetchRecommendedVideos(
+      int pageNum, int pageSize) async {
     final Map<String, dynamic> jsonResponse =
-        await provider.fetchRecommendedVideos();
-    MwListResponse<RecommendedVideo> mwResponse = MwListResponse.fromJson(
-        jsonResponse, (json) => RecommendedVideo.fromJson(json));
-    List<RecommendedVideo> list = [];
-    if (mwResponse.code == 0) {
-      if (mwResponse.data != null) {
-        list = mwResponse.data!;
-      }
-    }
-    return list;
+        await provider.fetchRecommendedVideos(pageNum, pageSize);
+    BilibiliResponse<BilibiliList<RecommendVideo>> response =
+        BilibiliResponse.fromJson(
+            jsonResponse,
+            (listJson) => BilibiliList.fromJson(
+                listJson, (rvJson) => RecommendVideo.fromJson(rvJson)));
+    return response.code == 0 ? response.data?.list ?? [] : [];
   }
 
-  Future<BiliBiliResponse<VideoPlayUrlInfo>> fetchVideoPlayUrlInfo(
+  Future<BilibiliResponse<VideoPlayUrlInfo>> fetchVideoPlayUrlInfo(
       String bv, int cid) async {
     final Map<String, dynamic> jsonResponse =
         await provider.fetchVideoPlayUrlInfo(bv, cid);
-    return BiliBiliResponse.fromJson(
+    return BilibiliResponse.fromJson(
         jsonResponse, (json) => VideoPlayUrlInfo.fromJson(json));
   }
 
@@ -67,7 +65,7 @@ class BilibiliRepository {
       fetchVideoPlayUrlInfo(bv, cid),
       fetchVideoDanmakuElem(cid, segmentSize)
     ]);
-    BiliBiliResponse<VideoPlayUrlInfo> response = list[0];
+    BilibiliResponse<VideoPlayUrlInfo> response = list[0];
     return response.success
         ? response.data?.dash == null
             ? ActionMessage.f<VideoPlayUrlAndDanmakuInfo>('unknown error')

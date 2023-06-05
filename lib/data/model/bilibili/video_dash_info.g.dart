@@ -9,7 +9,7 @@ part of 'video_dash_info.dart';
 VideoDashInfo _$VideoDashInfoFromJson(Map<String, dynamic> json) =>
     VideoDashInfo(
       duration: json['duration'] as int,
-      minBufferTime: json['minBufferTime'] as double,
+      minBufferTime: (json['minBufferTime'] as num).toDouble(),
       video: (json['video'] as List<dynamic>)
           .map((e) =>
               VideoDashRepresentation.fromJson(e as Map<String, dynamic>))
