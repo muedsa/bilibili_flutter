@@ -38,7 +38,7 @@ class RecommendVideo {
   @JsonKey(name: 'first_frame')
   final String firstFrame;
   @JsonKey(name: 'pub_location')
-  final String pubLocation;
+  final String? pubLocation;
   final String bvid;
   @JsonKey(name: 'season_type')
   final int seasonType;

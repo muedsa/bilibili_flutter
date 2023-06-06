@@ -31,7 +31,7 @@ RecommendVideo _$RecommendVideoFromJson(Map<String, dynamic> json) =>
       shortLinkV2: json['short_link_v2'] as String,
       upFromV2: json['up_from_v2'] as int?,
       firstFrame: json['first_frame'] as String,
-      pubLocation: json['pub_location'] as String,
+      pubLocation: json['pub_location'] as String?,
       bvid: json['bvid'] as String,
       seasonType: json['season_type'] as int,
       isOgv: json['is_ogv'] as bool,

@@ -122,8 +122,26 @@ class AdaptivePlayerController {
   final FlutterDanmakuController _danmakuController =
       FlutterDanmakuController();
   late Timer _danmakuTimer;
-  static const int _danmakuOffsetMs = 20;
+  static const int _danmakuOffsetMs = 16;
   int _historyDanmakuIndex;
+
+  static Widget Function(Text)? defaultDanmakuWidgetBuilder =
+      (Text textWidget) => Text(
+            textWidget.data!,
+            style: TextStyle(
+                fontSize: textWidget.style!.fontSize,
+                color: textWidget.style!.color,
+                shadows: const [
+                  Shadow(
+                    color: Colors.black,
+                    offset: Offset(1, 1),
+                  ),
+                  Shadow(
+                    color: Colors.black,
+                    offset: Offset(-1, -1),
+                  ),
+                ]),
+          );
 
   Future<void> initialize() async {
     debugPrint('player mediaUrl: $mediaUrl');
@@ -183,12 +201,34 @@ class AdaptivePlayerController {
   }
 
   Future<void> seekTo(Duration position) async {
+    _historyDanmakuIndex = -1;
     if (type == AdaptivePlayerType.dartVlc) {
       _vlcPlayer?.seek(position);
     } else if (type == AdaptivePlayerType.videoPlayer) {
       await _videoPlayerController?.seekTo(position);
     }
-    // todo _danmakuController seek
+    int curPosition = position.inMilliseconds;
+    int earlierPosition = position.inMilliseconds - 6000;
+    if (earlierPosition < 0) {
+      earlierPosition = 0;
+    }
+    _danmakuController.clearScreen();
+    int lastIndex = 0;
+    for (int i = 0; i < historyDanmakuList.length; i++) {
+      DanmakuElem danmakuElem = historyDanmakuList[i];
+      if (danmakuElem.progress > earlierPosition &&
+          danmakuElem.progress <= curPosition) {
+        debugPrint('danmaku seekTo $curPosition, add ${danmakuElem.progress}');
+        addDanmaku(danmakuElem.content,
+            color: Color(danmakuElem.color),
+            offsetMS: curPosition - danmakuElem.progress,
+            builder: defaultDanmakuWidgetBuilder);
+        lastIndex = i;
+      } else if (danmakuElem.progress > curPosition) {
+        break;
+      }
+    }
+    _historyDanmakuIndex = lastIndex;
   }
 
   bool get isPlaying {
@@ -220,42 +260,35 @@ class AdaptivePlayerController {
         color: color, builder: builder, offsetMS: offsetMS, position: position);
   }
 
+  /// tick定时器 根据视频时间向屏幕中添加弹幕
   void _danmakuTickUpdate(int tick) {
     //debugPrint('_danmakuTickUpdate $tick');
-    if (historyDanmakuList.isNotEmpty || isPlaying) {
+    if (historyDanmakuList.isNotEmpty &&
+        isPlaying &&
+        _historyDanmakuIndex >= 0) {
       position.then((p) {
         if (p != null) {
           int curPosition = p.inMilliseconds;
+          debugPrint('curPosition:$curPosition, ${_historyDanmakuIndex + 1}');
           for (int i = _historyDanmakuIndex + 1;
               i < historyDanmakuList.length;
               i++) {
             DanmakuElem danmakuElem = historyDanmakuList[i];
             if (danmakuElem.progress <= curPosition) {
               _historyDanmakuIndex = i;
+              debugPrint(
+                  '_danmakuTickUpdate, pos:$curPosition, add $_historyDanmakuIndex,${danmakuElem.progress}');
               addDanmaku(danmakuElem.content,
                   color: Color(danmakuElem.color),
                   offsetMS: curPosition - danmakuElem.progress,
-                  builder: (Text textWidget) => Text(
-                        textWidget.data!,
-                        style: TextStyle(
-                            fontSize: textWidget.style!.fontSize,
-                            color: textWidget.style!.color,
-                            shadows: const [
-                              Shadow(
-                                color: Colors.black,
-                                offset: Offset(1, 1),
-                              ),
-                              Shadow(
-                                color: Colors.black,
-                                offset: Offset(-1, -1),
-                              ),
-                            ]),
-                      ));
+                  builder: defaultDanmakuWidgetBuilder);
             } else {
               break;
             }
           }
         }
+      }).onError((error, stackTrace) {
+        debugPrintStack(stackTrace: stackTrace);
       });
     }
   }
