@@ -54,6 +54,8 @@ dependencies:
     git:
       url: https://github.com/MUedsa/flutter_danmaku.git
       ref: main
+  shelf: ^1.4.1
+  shelf_router: ^1.1.4
 
 dependency_overrides:
   dart_vlc_ffi:

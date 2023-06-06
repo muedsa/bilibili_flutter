@@ -6,6 +6,7 @@ import 'package:bilibili_flutter/data/service/api_client.dart';
 import 'package:bilibili_flutter/data/service/provider/bilibili_provider.dart';
 import 'package:bilibili_flutter/pages/main_page/main_page.dart';
 import 'package:bilibili_flutter/pages/player_page.dart';
+import 'package:bilibili_flutter/service/dash_mpd_server.dart';
 import 'package:bilibili_flutter/widgets/d_pad_control_focus.dart';
 import 'package:dart_vlc/dart_vlc.dart';
 import 'package:flutter/foundation.dart';
@@ -24,7 +25,7 @@ Widget _initMyApp() {
   final BilibiliProvider bilibiliProvider = BilibiliProvider(httpApiClient);
   final BilibiliRepository bilibiliRepository =
       BilibiliRepository(bilibiliProvider);
-
+  DashMpdServer.init(bilibiliRepository);
   return MultiRepositoryProvider(providers: [
     RepositoryProvider<BilibiliRepository>(
         create: (context) => bilibiliRepository)

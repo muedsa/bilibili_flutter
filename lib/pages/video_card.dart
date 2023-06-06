@@ -3,7 +3,6 @@ import 'package:bilibili_flutter/data/model/video_play_info.dart';
 import 'package:bilibili_flutter/data/repository/bilibili.dart';
 import 'package:bilibili_flutter/pages/player_page.dart';
 import 'package:bilibili_flutter/utils.dart';
-import 'package:bilibili_flutter/widgets/adaptive_player.dart';
 import 'package:bilibili_flutter/widgets/card.dart';
 import 'package:bilibili_flutter/widgets/d_pad_control_focus.dart';
 import 'package:flutter/material.dart';
@@ -60,27 +59,25 @@ class _VideoCardState extends State<VideoCard> {
           BilibiliRepository repository =
               RepositoryProvider.of<BilibiliRepository>(context);
           repository
-              .getVideoPlayUrlAndDanmakuInfo(
-                  widget.bv, widget.cid, widget.danmakuSegmentSize)
-              .then((m) {
-            if (m.success && m.data != null) {
-              Navigator.pushNamed(context, BilibiliVideoPlayerPage.routeName,
-                  arguments: VideoPlayInfo(
-                      title: widget.title,
-                      subtitle: widget.author,
-                      mediaUrl: AdaptivePlayerController.type ==
-                              AdaptivePlayerType.dartVlc
-                          ? m.data!.playUrlInfo.dash.video[0].baseUrl
-                          : VideoConvert.getDashMediaUrl(
-                              m.data!.playUrlInfo.dash),
-                      mediaHttpHeaders: <String, String>{
-                        HttpHeaderUtils.referer:
-                            'https://www.bilibili.com/video/${widget.bv}',
-                        HttpHeaderUtils.userAgent:
-                            HttpHeaderUtils.chromeUserAgent
-                      },
-                      danmakuList: m.data!.danmakuList));
-            }
+              .fetchVideoDanmakuElem(widget.cid, widget.danmakuSegmentSize)
+              .then((danmakuList) {
+            Navigator.pushNamed(context, BilibiliVideoPlayerPage.routeName,
+                arguments: VideoPlayInfo(
+                    title: widget.title,
+                    subtitle: widget.author,
+                    mediaUrl:
+                        VideoConvert.getDashMediaUrl(widget.bv, widget.cid),
+                    mediaHttpHeaders: <String, String>{
+                      HttpHeaderUtils.referer:
+                          'https://www.bilibili.com/video/${widget.bv}',
+                      HttpHeaderUtils.refererSpecial:
+                          'https://www.bilibili.com/video/${widget.bv}',
+                      HttpHeaderUtils.userAgent:
+                          HttpHeaderUtils.chromeUserAgent,
+                      HttpHeaderUtils.userAgentSpecial:
+                          HttpHeaderUtils.chromeUserAgent,
+                    },
+                    danmakuList: danmakuList));
           });
         },
         child: SimpleImageCard(

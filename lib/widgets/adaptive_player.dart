@@ -208,10 +208,7 @@ class AdaptivePlayerController {
       await _videoPlayerController?.seekTo(position);
     }
     int curPosition = position.inMilliseconds;
-    int earlierPosition = position.inMilliseconds - 6000;
-    if (earlierPosition < 0) {
-      earlierPosition = 0;
-    }
+    int earlierPosition = curPosition < 6000 ? 0 : curPosition - 6000;
     _danmakuController.clearScreen();
     int lastIndex = 0;
     for (int i = 0; i < historyDanmakuList.length; i++) {
