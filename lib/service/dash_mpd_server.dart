@@ -12,14 +12,15 @@ import 'package:shelf/shelf_io.dart' as io;
 import 'package:shelf_router/shelf_router.dart';
 
 class DashMpdServer {
+  static late BilibiliRepository _repository;
+
   static late HttpServer httpServer;
-  static late BilibiliRepository repository;
   static late String host;
 
   static String mpdPath = '/mpb';
 
   static init(BilibiliRepository repository) {
-    DashMpdServer.repository = repository;
+    DashMpdServer._repository = repository;
 
     Router router = Router(notFoundHandler: (Request request) {
       debugPrint('http request: ${request.url}');
@@ -46,7 +47,7 @@ class DashMpdServer {
     if (paramBv != null && paramCid != null) {
       debugPrint('http request headers: ${request.headers}');
       BilibiliResponse<VideoPlayUrlInfo> response =
-          await repository.fetchVideoPlayUrlInfo(paramBv, int.parse(paramCid));
+          await _repository.fetchVideoPlayUrlInfo(paramBv, int.parse(paramCid));
       if (response.code == 0 && response.data != null) {
         httpResponse = buildMpd(response.data!,
             paramQn != null ? int.tryParse(paramQn) : null, paramCodec);
@@ -59,10 +60,9 @@ class DashMpdServer {
       VideoPlayUrlInfo videoPlayUrlInfo, int? qn, String? codec) {
     VideoDashInfo dash = videoPlayUrlInfo.dash.filterVideoAudio(qn, codec);
     List<String> videoRepresentationList = [];
-    int i = 0;
     for (VideoDashRepresentation video in dash.video) {
       String videoUrl = '<![CDATA[${video.baseUrl}]]>';
-      i++;
+      //videoUrl = videoUrl.replaceFirst('https://', 'http://');
       videoRepresentationList
           .add('''<Representation id="${video.id}_${video.codeCid}"
                  codecs="${video.codecs}"
@@ -80,6 +80,7 @@ class DashMpdServer {
     List<String> audioRepresentationList = [];
     for (VideoDashRepresentation audio in dash.audio) {
       String audioUrl = '<![CDATA[${audio.baseUrl}]]>';
+      //audioUrl = audioUrl.replaceFirst('https://', 'http://');
       audioRepresentationList
           .add('''<Representation id="${audio.id}_${audio.codeCid}"
                  codecs="${audio.codecs}"

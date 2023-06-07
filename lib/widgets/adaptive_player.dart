@@ -146,8 +146,8 @@ class AdaptivePlayerController {
   Future<void> initialize() async {
     debugPrint('player mediaUrl: $mediaUrl');
     if (type == AdaptivePlayerType.dartVlc) {
-      _vlcPlayer = Player(id: 23333, commandlineArguments: [
-        '--http-referrer=${HttpHeaderUtils.getValue(httpHeaders, HttpHeaderUtils.referer)}',
+      _vlcPlayer = Player(id: 0, commandlineArguments: [
+        '--http-referrer=${HttpHeaderUtils.getValue(httpHeaders, HttpHeaderUtils.refererUppercase)}',
       ]);
       _vlcPlayer?.setUserAgent(
           HttpHeaderUtils.getValue(httpHeaders, HttpHeaderUtils.userAgent) ??
@@ -201,6 +201,9 @@ class AdaptivePlayerController {
   }
 
   Future<void> seekTo(Duration position) async {
+    if (isBuffering) {
+      return;
+    }
     _historyDanmakuIndex = -1;
     if (type == AdaptivePlayerType.dartVlc) {
       _vlcPlayer?.seek(position);
@@ -235,6 +238,15 @@ class AdaptivePlayerController {
       return _videoPlayerController?.value.isPlaying ?? false;
     }
     return false;
+  }
+
+  bool get isBuffering {
+    if (type == AdaptivePlayerType.dartVlc) {
+      return _vlcPlayer?.playback.isSeekable ?? false;
+    } else if (type == AdaptivePlayerType.videoPlayer) {
+      return _videoPlayerController?.value.isBuffering ?? false;
+    }
+    return true;
   }
 
   Future<Duration?> get position async {

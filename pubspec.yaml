@@ -48,7 +48,6 @@ dependencies:
       ref: master
   build_runner: ^2.3.3
   sprintf: ^7.0.0
-  lzstring: ^2.0.0+2
   protobuf: ^2.1.0
   flutter_danmaku:
     git:
@@ -56,6 +55,7 @@ dependencies:
       ref: main
   shelf: ^1.4.1
   shelf_router: ^1.1.4
+  shared_preferences: ^2.1.1
 
 dependency_overrides:
   dart_vlc_ffi:

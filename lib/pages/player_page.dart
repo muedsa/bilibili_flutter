@@ -3,7 +3,6 @@ import 'dart:io';
 import 'package:bilibili_flutter/data/model/video_play_info.dart';
 import 'package:bilibili_flutter/widgets/adaptive_player.dart';
 import 'package:flutter/material.dart';
-import 'package:video_player/video_player.dart';
 
 class BilibiliVideoPlayerPage extends StatefulWidget {
   static const String routeName = 'bilibiliVideoPlayer';
@@ -27,7 +26,7 @@ class _BilibiliVideoPlayerPageState extends State<BilibiliVideoPlayerPage> {
         subTitle: widget.videoPlayInfo.subtitle,
         mediaUrl: widget.videoPlayInfo.mediaUrl,
         httpHeaders: widget.videoPlayInfo.mediaHttpHeaders,
-        formatHint: VideoFormat.dash,
+        formatHint: widget.videoPlayInfo.mediaFormat,
         historyDanmakuList: widget.videoPlayInfo.danmakuList);
     _controller.initialize().then((_) {
       _controller.play();

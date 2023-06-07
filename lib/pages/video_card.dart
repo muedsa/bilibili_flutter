@@ -1,12 +1,15 @@
 import 'package:bilibili_flutter/data/convert/video_convert.dart';
+import 'package:bilibili_flutter/data/model/bilibili/danmaku/danmaku.pb.dart';
 import 'package:bilibili_flutter/data/model/video_play_info.dart';
 import 'package:bilibili_flutter/data/repository/bilibili.dart';
 import 'package:bilibili_flutter/pages/player_page.dart';
 import 'package:bilibili_flutter/utils.dart';
+import 'package:bilibili_flutter/widgets/adaptive_player.dart';
 import 'package:bilibili_flutter/widgets/card.dart';
 import 'package:bilibili_flutter/widgets/d_pad_control_focus.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
+import 'package:video_player/video_player.dart';
 
 class VideoCard extends StatefulWidget {
   static const double coverAspectRatio = 16.0 / 9.0;
@@ -58,27 +61,44 @@ class _VideoCardState extends State<VideoCard> {
         onTap: () {
           BilibiliRepository repository =
               RepositoryProvider.of<BilibiliRepository>(context);
-          repository
-              .fetchVideoDanmakuElem(widget.cid, widget.danmakuSegmentSize)
-              .then((danmakuList) {
+          next(String mediaUrl, VideoFormat videoFormat,
+              List<DanmakuElem> danmakuList) {
             Navigator.pushNamed(context, BilibiliVideoPlayerPage.routeName,
                 arguments: VideoPlayInfo(
-                    title: widget.title,
-                    subtitle: widget.author,
-                    mediaUrl:
-                        VideoConvert.getDashMediaUrl(widget.bv, widget.cid),
-                    mediaHttpHeaders: <String, String>{
-                      HttpHeaderUtils.referer:
-                          'https://www.bilibili.com/video/${widget.bv}',
-                      HttpHeaderUtils.refererSpecial:
-                          'https://www.bilibili.com/video/${widget.bv}',
-                      HttpHeaderUtils.userAgent:
-                          HttpHeaderUtils.chromeUserAgent,
-                      HttpHeaderUtils.userAgentSpecial:
-                          HttpHeaderUtils.chromeUserAgent,
-                    },
-                    danmakuList: danmakuList));
-          });
+                  title: widget.title,
+                  subtitle: widget.author,
+                  mediaUrl: mediaUrl,
+                  mediaFormat: videoFormat,
+                  mediaHttpHeaders: <String, String>{
+                    HttpHeaderUtils.refererUppercase:
+                        'https://www.bilibili.com/video/${widget.bv}',
+                    HttpHeaderUtils.userAgentUppercase:
+                        HttpHeaderUtils.chromeUserAgent,
+                  },
+                  danmakuList: danmakuList,
+                ));
+          }
+
+          if (AdaptivePlayerController.type == AdaptivePlayerType.dartVlc) {
+            repository
+                .getVideoPlayUrlAndDanmakuInfo(
+                    widget.bv, widget.cid, widget.danmakuSegmentSize)
+                .then((m) {
+              if (m.success &&
+                  m.data != null &&
+                  m.data!.playUrlInfo.dash.video.isNotEmpty) {
+                next(m.data!.playUrlInfo.dash.video[0].baseUrl,
+                    VideoFormat.other, m.data!.danmakuList);
+              }
+            });
+          } else {
+            repository
+                .fetchVideoDanmakuElem(widget.cid, widget.danmakuSegmentSize)
+                .then((danmakuList) => next(
+                    VideoConvert.getDashMediaUrl(widget.bv, widget.cid),
+                    VideoFormat.dash,
+                    danmakuList));
+          }
         },
         child: SimpleImageCard(
           imageUrl: widget.coverUrl,

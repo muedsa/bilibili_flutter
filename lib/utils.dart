@@ -25,8 +25,8 @@ class ImageUtils {
 class HttpHeaderUtils {
   static const String referer = 'referer';
   static const String userAgent = 'user-agent';
-  static const String refererSpecial = 'Referer';
-  static const String userAgentSpecial = 'User-Agent';
+  static const String refererUppercase = 'Referer';
+  static const String userAgentUppercase = 'User-Agent';
   static const String chromeUserAgent =
       'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/109.0.0.0 Safari/537.36';
 
